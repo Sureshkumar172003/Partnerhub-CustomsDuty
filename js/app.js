@@ -1,0 +1,810 @@
+// PartnerHub SLDS — Core Application JavaScript
+// Salesforce Lightning Design System inspired UI logic
+// ================================================================
+
+// ----------------------------------------------------------------
+//  PRODUCT DATA
+// ----------------------------------------------------------------
+const PH_PRODUCTS = [
+    { id: 1, name: 'ProBook Laptop 15"', sku: 'LP-PRO-001', category: 'Laptops', stock: 45, unit: 'piece', image: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=480&q=80' },
+    { id: 2, name: 'AudioMax Pro Headphones', sku: 'HP-AUD-002', category: 'Audio', stock: 120, unit: 'piece', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=480&q=80' },
+    { id: 3, name: 'Precision Watch Executive', sku: 'WT-PRE-003', category: 'Accessories', stock: 8, unit: 'piece', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=480&q=80' },
+    { id: 4, name: 'CapturePlus DSLR Camera', sku: 'CM-CAP-004', category: 'Cameras', stock: 23, unit: 'piece', image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=480&q=80' },
+    { id: 5, name: 'ErgoKeys Mechanical 75%', sku: 'KB-ERG-005', category: 'Peripherals', stock: 67, unit: 'piece', image: 'https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=480&q=80' },
+    { id: 6, name: 'SwiftRun Pro Sneakers', sku: 'SN-SWT-006', category: 'Footwear', stock: 3, unit: 'pair', image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=480&q=80' },
+    { id: 7, name: 'NoiseFree TWS Earbuds', sku: 'EB-NF-007', category: 'Audio', stock: 89, unit: 'piece', image: 'https://images.unsplash.com/photo-1590658268037-6bf12165cd8b?w=480&q=80' },
+    { id: 8, name: 'UltraSlim Laptop 13"', sku: 'LP-ULT-008', category: 'Laptops', stock: 31, unit: 'piece', image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=480&q=80' },
+    { id: 9, name: 'ChargePlus Wireless Pad', sku: 'WC-CHG-009', category: 'Accessories', stock: 0, unit: 'piece', image: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=480&q=80' },
+    { id: 10, name: 'ViewMax Monitor 27"', sku: 'MN-VW-010', category: 'Monitors', stock: 14, unit: 'piece', image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=480&q=80' },
+    { id: 11, name: 'SteadyClick Pro Mouse', sku: 'MS-STD-011', category: 'Peripherals', stock: 55, unit: 'piece', image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=480&q=80' },
+    { id: 12, name: 'TravelPro Backpack 30L', sku: 'BG-TRV-012', category: 'Bags', stock: 42, unit: 'piece', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=480&q=80' },
+];
+
+// ----------------------------------------------------------------
+//  FORWARD ORDERS DATA
+// ----------------------------------------------------------------
+const PH_FWD_ORDERS = [
+    { id: 'ORD-FWD-6672', date: '2024-03-10', customer: 'Nexus Corp', contact: 'Vikram Malhotra', items: 4, total: 4999.96, status: 'Processing', priority: 'High', channel: 'Online', warehouse: 'WH-MUM-01' },
+    { id: 'ORD-FWD-6671', date: '2024-03-09', customer: 'Vertex Solutions', contact: 'Priya Sharma', items: 2, total: 1399.98, status: 'Shipped', priority: 'Normal', channel: 'Direct', warehouse: 'WH-DEL-02' },
+    { id: 'ORD-FWD-6670', date: '2024-03-08', customer: 'Apex Industries', contact: 'Rohit Gupta', items: 7, total: 5249.93, status: 'Delivered', priority: 'Normal', channel: 'Online', warehouse: 'WH-BLR-01' },
+    { id: 'ORD-FWD-6669', date: '2024-03-07', customer: 'Delta Systems', contact: 'Anita Joshi', items: 1, total: 599.99, status: 'Pending', priority: 'Low', channel: 'Direct', warehouse: 'WH-MUM-01' },
+    { id: 'ORD-FWD-6668', date: '2024-03-06', customer: 'Orion Tech', contact: 'Suresh Kumar', items: 3, total: 2149.97, status: 'Delivered', priority: 'High', channel: 'Online', warehouse: 'WH-HYD-01' },
+    { id: 'ORD-FWD-6667', date: '2024-03-05', customer: 'Summit Partners', contact: 'Kavya Reddy', items: 5, total: 4299.95, status: 'Cancelled', priority: 'Normal', channel: 'Direct', warehouse: 'WH-DEL-02' },
+    { id: 'ORD-FWD-6666', date: '2024-03-04', customer: 'Cascade Retail', contact: 'Arjun Nair', items: 2, total: 799.98, status: 'Delivered', priority: 'Low', channel: 'Online', warehouse: 'WH-BLR-01' },
+    { id: 'ORD-FWD-6665', date: '2024-03-03', customer: 'Prism Distributors', contact: 'Meena Singh', items: 6, total: 7199.94, status: 'Shipped', priority: 'High', channel: 'B2B', warehouse: 'WH-MUM-01' },
+];
+
+// ----------------------------------------------------------------
+//  ASN DATA
+// ----------------------------------------------------------------
+const PH_ASNS = [
+    { id: 'ASN-2024-0041', date: '2024-03-10', supplier: 'Alpha Logistics', items: 12, units: 480, status: 'Received', warehouse: 'WH-MUM-01', po: 'PO-2024-0091' },
+    { id: 'ASN-2024-0040', date: '2024-03-09', supplier: 'Beta Supply Co.', items: 8, units: 320, status: 'In-Transit', warehouse: 'WH-DEL-02', po: 'PO-2024-0090' },
+    { id: 'ASN-2024-0039', date: '2024-03-08', supplier: 'Gamma Wholesale', items: 15, units: 600, status: 'Pending', warehouse: 'WH-BLR-01', po: 'PO-2024-0089' },
+    { id: 'ASN-2024-0038', date: '2024-03-07', supplier: 'Delta Imports', items: 6, units: 240, status: 'Received', warehouse: 'WH-HYD-01', po: 'PO-2024-0088' },
+    { id: 'ASN-2024-0037', date: '2024-03-06', supplier: 'Alpha Logistics', items: 20, units: 800, status: 'Discrepancy', warehouse: 'WH-MUM-01', po: 'PO-2024-0087' },
+    { id: 'ASN-2024-0036', date: '2024-03-05', supplier: 'Epsilon Goods', items: 9, units: 360, status: 'Received', warehouse: 'WH-DEL-02', po: 'PO-2024-0086' },
+];
+
+// ----------------------------------------------------------------
+//  RETURN ORDERS DATA
+// ----------------------------------------------------------------
+const PH_RETURNS = [
+    { id: 'RET-2024-0021', date: '2024-03-10', customer: 'Nexus Corp', items: 2, amount: 599.98, status: 'Received', reason: 'Damaged', order: 'ORD-FWD-6660', refund: 'Approved' },
+    { id: 'RET-2024-0020', date: '2024-03-09', customer: 'Vertex Solutions', items: 1, amount: 199.99, status: 'Processing', reason: 'Wrong Item', order: 'ORD-FWD-6655', refund: 'Pending' },
+    { id: 'RET-2024-0019', date: '2024-03-08', customer: 'Apex Industries', items: 3, amount: 1499.97, status: 'Completed', reason: 'Not Needed', order: 'ORD-FWD-6648', refund: 'Approved' },
+    { id: 'RET-2024-0018', date: '2024-03-07', customer: 'Delta Systems', items: 1, amount: 449.99, status: 'Pending', reason: 'Defective', order: 'ORD-FWD-6640', refund: 'Pending' },
+    { id: 'RET-2024-0017', date: '2024-03-05', customer: 'Orion Tech', items: 2, amount: 299.98, status: 'Completed', reason: 'Damaged', order: 'ORD-FWD-6632', refund: 'Approved' },
+];
+
+// ----------------------------------------------------------------
+//  NAV ITEMS
+// ----------------------------------------------------------------
+const PH_NAV = [
+    { id: 'dashboard', label: 'Dashboard', href: 'dashboard.html', icon: 'home', group: 'Dashboard' },
+    { id: 'available-stock', label: 'Available Stock', href: 'available-stock.html', icon: 'stock', group: 'Stock Management' },
+    { id: 'damaged-stock', label: 'Damaged Stock', href: 'damaged-stock.html', icon: 'warn', group: 'Stock Management' },
+    { id: 'store-stock', label: 'Store Stock', href: 'store-stock.html', icon: 'home', group: 'Stock Management' },
+    { id: 'item-master', label: 'Item Master', href: 'item-master-list.html', icon: 'product', group: 'Masters' },
+    { id: 'address-master', label: 'Address Master', href: 'address-master-list.html', icon: 'address', group: 'Masters' },
+    { id: 'user-master', label: 'User Master', href: 'user-master-list.html', icon: 'user', group: 'Masters' },
+    { id: 'forward-order', label: 'Order', href: 'forward-order-list.html', icon: 'order', group: 'Orders & ASN' },
+    { id: 'return-order', label: 'Return Order', href: 'return-order-list.html', icon: 'return', group: 'Orders & ASN' },
+    { id: 'asn-create', label: 'ASN Creation', href: 'asn-create.html', icon: 'asn', group: 'Orders & ASN' },
+    { id: 'adhoc-return', label: 'Ad-hoc Return', href: 'adhoc-return-list.html', icon: 'refresh', group: 'Orders & ASN' },
+    { id: 'duty-upload', label: 'New Upload', href: 'duty-upload.html', icon: 'product', group: 'Customs Duty' },
+    { id: 'duty-grid', label: 'Transaction Grid', href: 'duty-grid.html', icon: 'order', group: 'Customs Duty' },
+    { id: 'duty-detail', label: 'Detail View', href: 'duty-detail.html', icon: 'info', group: 'Customs Duty' },
+];
+
+const PH_NAV_GROUPS = [
+    { id: 'Dashboard', label: '' },
+    { id: 'Stock Management', label: 'Stock Management' },
+    { id: 'Masters', label: 'Masters' },
+    { id: 'Orders & ASN', label: 'Orders & ASN' },
+    { id: 'Customs Duty', label: 'Customs Duty' },
+];
+
+const PH_SIDEBAR_STATE_KEY = 'ph_slds_sidebar_collapsed';
+let phActiveTooltipTarget = null;
+let phDataTableAssetsPromise = null;
+
+// ----------------------------------------------------------------
+//  SVG ICON PATHS
+// ----------------------------------------------------------------
+const ICON_PATHS = {
+    home: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
+    order: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+    asn: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>',
+    return: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>',
+    product: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>',
+    stock: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>',
+    report: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>',
+    user: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>',
+    setting: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
+    billing: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>',
+    address: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>',
+    logout: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>',
+    notif: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>',
+    search: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>',
+    close: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+    plus: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',
+    download: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>',
+    filter: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>',
+    check: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+    dots: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/>',
+    star: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>',
+    edit: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>',
+    truck: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0H3m11 0h3"/>',
+    warn: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
+    info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    apps: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+    chevron: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>',
+    refresh: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
+};
+
+function icon(name, cls = '') {
+    return `<svg class="${cls}" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${ICON_PATHS[name] || ''}</svg>`;
+}
+
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem('ph_slds_user') || '{"name":"Demo User","company":"Partner Co.","initials":"DU"}');
+}
+
+function getSidebarToggleIconPath(collapsed) {
+    return collapsed
+        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5l7 7-7 7"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 5v14"/>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 5l-7 7 7 7"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 5v14"/>';
+}
+
+function isSidebarCollapsed() {
+    return localStorage.getItem(PH_SIDEBAR_STATE_KEY) === '1';
+}
+
+function ensureNavTooltip() {
+    let tooltip = document.getElementById('slds-nav-tooltip');
+    if (tooltip) return tooltip;
+
+    tooltip = document.createElement('div');
+    tooltip.id = 'slds-nav-tooltip';
+    tooltip.className = 'slds-nav-tooltip';
+    tooltip.setAttribute('role', 'tooltip');
+    tooltip.innerHTML = '<span class="slds-nav-tooltip__label"></span>';
+    document.body.appendChild(tooltip);
+    return tooltip;
+}
+
+function positionNavTooltip(target) {
+    const tooltip = ensureNavTooltip();
+    const rect = target.getBoundingClientRect();
+    tooltip.classList.remove('slds-nav-tooltip--left');
+    tooltip.style.left = '0px';
+    tooltip.style.top = '0px';
+
+    const spacing = 14;
+    const tooltipWidth = tooltip.offsetWidth;
+    let left = rect.right + spacing;
+
+    if (left + tooltipWidth > window.innerWidth - 12) {
+        left = rect.left - tooltipWidth - spacing;
+        tooltip.classList.add('slds-nav-tooltip--left');
+    }
+
+    tooltip.style.left = `${Math.max(12, left)}px`;
+    tooltip.style.top = `${rect.top + rect.height / 2}px`;
+}
+
+function showNavTooltip(target) {
+    if (!target || window.innerWidth <= 768 || !document.body.classList.contains('slds-sidebar-collapsed')) {
+        hideNavTooltip();
+        return;
+    }
+
+    const label = target.dataset.tooltip;
+    if (!label) return;
+
+    const tooltip = ensureNavTooltip();
+    tooltip.querySelector('.slds-nav-tooltip__label').textContent = label;
+    phActiveTooltipTarget = target;
+    positionNavTooltip(target);
+    tooltip.classList.add('open');
+}
+
+function hideNavTooltip() {
+    const tooltip = document.getElementById('slds-nav-tooltip');
+    if (tooltip) tooltip.classList.remove('open', 'slds-nav-tooltip--left');
+    phActiveTooltipTarget = null;
+}
+
+function initNavTooltips() {
+    if (document.body.dataset.navTooltipBound === '1') return;
+    document.body.dataset.navTooltipBound = '1';
+
+    document.addEventListener('mouseover', event => {
+        const navItem = event.target.closest('.slds-nav-item[data-tooltip]');
+        if (!navItem || navItem.contains(event.relatedTarget)) return;
+        showNavTooltip(navItem);
+    });
+
+    document.addEventListener('mouseout', event => {
+        const navItem = event.target.closest('.slds-nav-item[data-tooltip]');
+        if (!navItem || navItem.contains(event.relatedTarget)) return;
+        hideNavTooltip();
+    });
+
+    document.addEventListener('focusin', event => {
+        const navItem = event.target.closest('.slds-nav-item[data-tooltip]');
+        if (navItem) showNavTooltip(navItem);
+    });
+
+    document.addEventListener('focusout', event => {
+        const navItem = event.target.closest('.slds-nav-item[data-tooltip]');
+        if (navItem) hideNavTooltip();
+    });
+
+    window.addEventListener('scroll', () => {
+        if (phActiveTooltipTarget) positionNavTooltip(phActiveTooltipTarget);
+    }, true);
+
+    window.addEventListener('resize', () => {
+        if (phActiveTooltipTarget) {
+            if (window.innerWidth <= 768 || !document.body.classList.contains('slds-sidebar-collapsed')) {
+                hideNavTooltip();
+            } else {
+                positionNavTooltip(phActiveTooltipTarget);
+            }
+        }
+    });
+}
+
+function applySidebarState() {
+    const collapsed = isSidebarCollapsed();
+    document.body.classList.toggle('slds-sidebar-collapsed', collapsed);
+    hideNavTooltip();
+
+    const toggleButton = document.getElementById('slds-sidebar-toggle');
+    if (toggleButton) {
+        const actionLabel = collapsed ? 'Expand menu' : 'Collapse menu';
+        toggleButton.setAttribute('title', actionLabel);
+        toggleButton.setAttribute('aria-label', actionLabel);
+    }
+
+    const toggleIcon = document.getElementById('slds-sidebar-toggle-icon');
+    if (toggleIcon) toggleIcon.innerHTML = getSidebarToggleIconPath(collapsed);
+}
+
+function toggleSidebar() {
+    const next = isSidebarCollapsed() ? '0' : '1';
+    localStorage.setItem(PH_SIDEBAR_STATE_KEY, next);
+    applySidebarState();
+}
+
+function isNavItemActive(item, activePage) {
+    if (item.id === activePage) return true;
+    return Array.isArray(item.children) && item.children.some(child => child.id === activePage);
+}
+
+function getGroupedNavSections(activePage, itemRenderer) {
+    return PH_NAV_GROUPS.map(group => {
+        const items = PH_NAV.filter(item => item.group === group.id);
+        if (!items.length) return '';
+        return `
+    <section class="slds-app-nav__section">
+            ${group.label ? `<div class="slds-app-nav__section-label">${group.label}</div>` : ''}
+      <div class="slds-app-nav__items">${items.map(item => itemRenderer(item, isNavItemActive(item, activePage))).join('')}</div>
+    </section>`;
+    }).join('');
+}
+
+function getDesktopNavItemHTML(item, isActive, activePage) {
+    if (!item.children) {
+        return `
+        <a href="${item.href}" class="slds-nav-item${isActive ? ' active' : ''}" data-tooltip="${item.label}" aria-label="${item.label}">
+          <span class="slds-nav-item__icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PATHS[item.icon] || ''}</svg>
+          </span>
+          <span class="slds-nav-item__label">${item.label}</span>
+        </a>`;
+    }
+
+    const children = item.children.map(child => `
+      <a href="${child.href}" class="slds-nav-item slds-nav-item--child${activePage === child.id ? ' active' : ''}" data-tooltip="${child.label}" aria-label="${child.label}">
+        <span class="slds-nav-item__icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PATHS[child.icon] || ''}</svg>
+        </span>
+        <span class="slds-nav-item__label">${child.label}</span>
+      </a>`).join('');
+
+    return `
+    <div class="slds-nav-group${isActive ? ' active' : ''}">
+      <div class="slds-nav-item slds-nav-item--group${isActive ? ' active' : ''}" data-tooltip="${item.label}" aria-label="${item.label}">
+        <span class="slds-nav-item__icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PATHS[item.icon] || ''}</svg>
+        </span>
+        <span class="slds-nav-item__label">${item.label}</span>
+      </div>
+      <div class="slds-nav-children">${children}</div>
+    </div>`;
+}
+
+function getMobileNavItemHTML(item, isActive, activePage) {
+    if (!item.children) {
+        return `
+        <a href="${item.href}" class="slds-mobile-nav-item${isActive ? ' active' : ''}" onclick="closeMobileNav()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PATHS[item.icon] || ''}</svg>
+          ${item.label}
+        </a>`;
+    }
+
+    const children = item.children.map(child => `
+      <a href="${child.href}" class="slds-mobile-nav-item slds-mobile-nav-item--child${activePage === child.id ? ' active' : ''}" onclick="closeMobileNav()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PATHS[child.icon] || ''}</svg>
+        ${child.label}
+      </a>`).join('');
+
+    return `
+    <div class="slds-mobile-nav-group${isActive ? ' active' : ''}">
+      <div class="slds-mobile-nav-parent">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PATHS[item.icon] || ''}</svg>
+        ${item.label}
+      </div>
+      <div class="slds-mobile-nav-children">${children}</div>
+    </div>`;
+}
+
+// ----------------------------------------------------------------
+//  STATUS HELPERS
+// ----------------------------------------------------------------
+function statusBadge(status) {
+    const map = {
+        'Processing': 'slds-badge-info',
+        'Pending': 'slds-badge-warning',
+        'Shipped': 'slds-badge-purple',
+        'Delivered': 'slds-badge-success',
+        'Cancelled': 'slds-badge-error',
+        'Received': 'slds-badge-success',
+        'In-Transit': 'slds-badge-info',
+        'Discrepancy': 'slds-badge-error',
+        'Completed': 'slds-badge-success',
+        'Approved': 'slds-badge-success',
+        'Ready for Pickup': 'slds-badge-warning',
+        'Active': 'slds-badge-success',
+        'Inactive': 'slds-badge-neutral',
+    };
+    const cls = map[status] || 'slds-badge-neutral';
+    return `<span class="slds-badge ${cls}">${status}</span>`;
+}
+
+function priorityBadge(priority) {
+    const map = { 'High': 'slds-badge-error', 'Normal': 'slds-badge-info', 'Low': 'slds-badge-neutral' };
+    return `<span class="slds-badge ${map[priority] || 'slds-badge-neutral'}">${priority}</span>`;
+}
+
+function formatDate(d) {
+    if (!d) return '—';
+    const p = new Date(d);
+    return p.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatCurrency(n) {
+    return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+}
+
+// ----------------------------------------------------------------
+//  HEADER DROPDOWNS
+// ----------------------------------------------------------------
+function closeAllHeaderDropdowns() {
+    document.querySelectorAll('.slds-hdr-dropdown').forEach(d => d.style.display = 'none');
+}
+
+function toggleHeaderDropdown(id, e) {
+    if (e) e.stopPropagation();
+    const dd = document.getElementById(id);
+    if (!dd) return;
+    const isOpen = dd.style.display !== 'none';
+    closeAllHeaderDropdowns();
+    if (!isOpen) dd.style.display = 'block';
+}
+
+document.addEventListener('click', function () {
+    closeAllHeaderDropdowns();
+});
+
+// ----------------------------------------------------------------
+//  MOBILE NAV
+// ----------------------------------------------------------------
+function getMobileNavDrawerHTML(activePage) {
+    const sections = getGroupedNavSections(activePage, (item, isActive) => getMobileNavItemHTML(item, isActive, activePage));
+    return `
+    <div id="slds-mobile-nav-overlay" class="slds-mobile-nav-overlay" onclick="closeMobileNav()"></div>
+    <div id="slds-mobile-nav-drawer" class="slds-mobile-nav-drawer">
+      <div class="slds-mobile-nav-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="slds-brand-logo" style="width:28px;height:28px;font-size:10px;">PH</div>
+          <span class="slds-mobile-nav-title">PartnerHub WMS</span>
+        </div>
+        <button class="slds-mobile-nav-close" onclick="closeMobileNav()">&#215;</button>
+      </div>
+      <div class="slds-mobile-nav-items">${sections}</div>
+      <div class="slds-mobile-nav-footer">WMS Platform &middot; v1.0.1</div>
+    </div>`;
+}
+
+function toggleMobileNav() {
+    const overlay = document.getElementById('slds-mobile-nav-overlay');
+    const drawer = document.getElementById('slds-mobile-nav-drawer');
+    if (!overlay || !drawer) return;
+    const isOpen = drawer.classList.contains('open');
+    overlay.classList.toggle('open', !isOpen);
+    drawer.classList.toggle('open', !isOpen);
+    document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+
+function closeMobileNav() {
+    const overlay = document.getElementById('slds-mobile-nav-overlay');
+    const drawer = document.getElementById('slds-mobile-nav-drawer');
+    if (overlay) overlay.classList.remove('open');
+    if (drawer) drawer.classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// ----------------------------------------------------------------
+//  GLOBAL HEADER HTML
+// ----------------------------------------------------------------
+function getGlobalHeaderHTML() {
+    const user = getCurrentUser();
+    return `
+    <header class="slds-global-header">
+      <!-- Hamburger (mobile only) -->
+      <button class="slds-mobile-menu-btn" title="Menu" onclick="toggleMobileNav()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:22px;height:22px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+
+      <button id="slds-sidebar-toggle" class="slds-sidebar-toggle slds-util-hide-mobile" type="button" title="Collapse menu" aria-label="Collapse menu" onclick="toggleSidebar()">
+        <svg id="slds-sidebar-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">${getSidebarToggleIconPath(false)}</svg>
+      </button>
+
+      <!-- Brand -->
+      <a href="dashboard.html" class="slds-global-header__brand">
+        <div class="slds-brand-logo">PH</div>
+        <span class="slds-brand-name">PartnerHub</span>
+      </a>
+
+      <!-- Search -->
+      <div class="slds-header-search">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PATHS.search}</svg>
+        <input type="text" placeholder="Search PartnerHub...">
+      </div>
+
+      <div class="slds-header-utilities">
+        <div class="slds-header-avatar" title="${user.name}">${user.initials}</div>
+      </div>
+    </header>`;
+}
+
+// ----------------------------------------------------------------
+//  APP NAVIGATION HTML
+// ----------------------------------------------------------------
+function getAppNavHTML(activePage) {
+    const sections = getGroupedNavSections(activePage, (item, isActive) => getDesktopNavItemHTML(item, isActive, activePage));
+
+    return `
+    <nav class="slds-app-nav">
+            <div class="slds-app-nav__scroll">${sections}</div>
+    </nav>`;
+}
+
+// ----------------------------------------------------------------
+//  AUTH
+// ----------------------------------------------------------------
+function checkAuth() {
+    const publicPages = ['index.html'];
+    const path = window.location.pathname;
+    const isPublic = publicPages.some(p => path.endsWith(p)) || path.endsWith('/partnerhub-salesforce/');
+    if (!localStorage.getItem('ph_slds_auth') && !isPublic) {
+        window.location.href = 'index.html';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('ph_slds_auth');
+    localStorage.removeItem('ph_slds_user');
+    window.location.href = 'index.html';
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value;
+    if (!email || !pass) { showToast('Please fill in all fields', 'error'); return; }
+    // Simulate auth
+    const user = { name: email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, c => c.toUpperCase()), company: 'PartnerHub Enterprise', initials: email.substring(0, 2).toUpperCase() };
+    localStorage.setItem('ph_slds_auth', '1');
+    localStorage.setItem('ph_slds_user', JSON.stringify(user));
+    window.location.href = 'dashboard.html';
+}
+
+// ----------------------------------------------------------------
+//  TOAST
+// ----------------------------------------------------------------
+function showToast(message, type = 'success', title = '') {
+    let zone = document.getElementById('slds-toast-zone');
+    if (!zone) {
+        zone = document.createElement('div');
+        zone.id = 'slds-toast-zone';
+        zone.className = 'slds-toast-zone';
+        document.body.appendChild(zone);
+    }
+
+    const iconMap = {
+        success: { path: ICON_PATHS.check, color: '#2E844A' },
+        error: { path: ICON_PATHS.close, color: '#BA0517' },
+        warning: { path: ICON_PATHS.warn, color: '#FE9339' },
+        info: { path: ICON_PATHS.info, color: '#0176D3' },
+    };
+    const ic = iconMap[type] || iconMap.info;
+    const id = 'toast-' + Date.now();
+
+    zone.insertAdjacentHTML('beforeend', `
+    <div id="${id}" class="slds-toast slds-toast-${type}">
+      <svg class="slds-toast__icon" fill="none" stroke="${ic.color}" viewBox="0 0 24 24">${ic.path}</svg>
+      <div class="slds-toast__body">
+        ${title ? `<div class="slds-toast__title">${title}</div>` : ''}
+        <div>${message}</div>
+      </div>
+      <button class="slds-toast__close" onclick="this.closest('.slds-toast').remove()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${ICON_PATHS.close}</svg>
+      </button>
+    </div>`);
+
+    setTimeout(() => { document.getElementById(id)?.remove(); }, 4000);
+}
+
+function exportData() {
+    showToast('Preparing report for download...', 'info', 'Export');
+    setTimeout(() => showToast('Data exported successfully (CSV)', 'success', 'Done'), 1500);
+}
+
+function loadStyleAsset(id, href) {
+    const existing = document.getElementById(id);
+    if (existing) return Promise.resolve(existing);
+
+    return new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.id = id;
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.onload = () => resolve(link);
+        link.onerror = () => reject(new Error(`Failed to load stylesheet: ${href}`));
+        document.head.appendChild(link);
+    });
+}
+
+function loadScriptAsset(id, src) {
+    const existing = document.getElementById(id);
+    if (existing && existing.dataset.loaded === '1') return Promise.resolve(existing);
+
+    return new Promise((resolve, reject) => {
+        const script = existing || document.createElement('script');
+        script.id = id;
+        script.src = src;
+        script.async = true;
+        script.onload = () => {
+            script.dataset.loaded = '1';
+            resolve(script);
+        };
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        if (!existing) document.head.appendChild(script);
+    });
+}
+
+function ensureDataTableAssets() {
+    if (window.jQuery && window.jQuery.fn && window.jQuery.fn.dataTable) {
+        return Promise.resolve();
+    }
+
+    if (!phDataTableAssetsPromise) {
+        phDataTableAssetsPromise = loadStyleAsset('ph-datatables-css', 'https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css')
+            .then(() => loadScriptAsset('ph-jquery-js', 'https://code.jquery.com/jquery-3.7.1.min.js'))
+            .then(() => loadScriptAsset('ph-datatables-js', 'https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js'))
+            .catch(error => {
+                console.warn(error);
+                phDataTableAssetsPromise = null;
+            });
+    }
+
+    return phDataTableAssetsPromise || Promise.resolve();
+}
+
+function resolveTableElement(tableOrSelector) {
+    if (!tableOrSelector) return null;
+    if (typeof tableOrSelector === 'string') return document.querySelector(tableOrSelector);
+    return tableOrSelector.tagName === 'TABLE' ? tableOrSelector : tableOrSelector.closest('table');
+}
+
+function getLegacyTableFooter(table) {
+    return table?.closest('.slds-table-wrap')?.nextElementSibling || null;
+}
+
+function setLegacyTableFooterHidden(table, hidden) {
+    const footer = getLegacyTableFooter(table);
+    if (footer) footer.classList.toggle('slds-datatable-legacy-footer', hidden);
+}
+
+function buildDataTableColumnDefs(table) {
+    return Array.from(table.querySelectorAll('thead th')).reduce((defs, th, index) => {
+        const text = th.textContent.trim().toLowerCase();
+        const inlineStyle = (th.getAttribute('style') || '').toLowerCase();
+        const hasCheckbox = !!th.querySelector('input[type="checkbox"]');
+        const isActions = text.includes('action') || inlineStyle.includes('text-align:right');
+        const isExplicitlyDisabled = th.dataset.dtOrder === 'false';
+
+        if (hasCheckbox || isActions || isExplicitlyDisabled) {
+            defs.push({ targets: index, orderable: false, searchable: !hasCheckbox });
+        }
+
+        return defs;
+    }, []);
+}
+
+function getDataTableOptions(table) {
+    const rowCount = table.tBodies[0]?.rows.length || 0;
+    const pageLength = Number.parseInt(table.dataset.dtPageLength || '8', 10);
+    const pagingEnabled = table.dataset.dtPaging !== 'false';
+    const orderingEnabled = table.dataset.dtOrdering !== 'false';
+    const searchingEnabled = table.dataset.dtSearching === 'true';
+    const legacyFooter = !!getLegacyTableFooter(table);
+    const showFooter = legacyFooter || rowCount > pageLength || table.dataset.dtInfo === 'true';
+
+    return {
+        paging: pagingEnabled,
+        ordering: orderingEnabled,
+        searching: searchingEnabled,
+        info: showFooter,
+        lengthChange: false,
+        autoWidth: false,
+        pageLength,
+        pagingType: 'simple_numbers',
+        order: [],
+        stripeClasses: [],
+        dom: showFooter ? 't<"slds-datatable-footer"ip>' : 't',
+        language: {
+            info: 'Showing _START_–_END_ of _TOTAL_ records',
+            infoEmpty: 'Showing 0 records',
+            infoFiltered: '',
+            paginate: {
+                previous: '‹',
+                next: '›',
+            },
+            emptyTable: 'No records available',
+            zeroRecords: 'No matching records found',
+        },
+        columnDefs: buildDataTableColumnDefs(table),
+        drawCallback() {
+            table.querySelectorAll('tbody tr').forEach(row => {
+                row.classList.remove('odd', 'even');
+            });
+        },
+    };
+}
+
+function refreshDataTable(tableOrSelector) {
+    const table = resolveTableElement(tableOrSelector);
+    if (!table || !table.querySelector('thead') || !table.querySelector('tbody')) return Promise.resolve(null);
+    if (table.offsetParent === null) return Promise.resolve(null);
+
+    return ensureDataTableAssets().then(() => {
+        if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.dataTable) return null;
+
+        const $table = window.jQuery(table);
+        if (window.jQuery.fn.dataTable.isDataTable(table)) {
+            $table.DataTable().destroy();
+            table.style.width = '';
+        }
+
+        $table.DataTable(getDataTableOptions(table));
+        setLegacyTableFooterHidden(table, true);
+        return $table.DataTable();
+    });
+}
+
+function enhancePageTables(root = document) {
+    const tables = Array.from(root.querySelectorAll('.slds-table')).filter(table => {
+        if (table.dataset.dtIgnore === 'true') return false;
+        return table.querySelector('thead') && table.querySelector('tbody') && table.offsetParent !== null;
+    });
+
+    return Promise.all(tables.map(table => refreshDataTable(table)));
+}
+
+// ----------------------------------------------------------------
+//  PAGE INIT
+// ----------------------------------------------------------------
+function initPage(activePage, pageTitle, tabLabel, tabIcon) {
+    checkAuth();
+
+    // Inject global header
+    const ghContainer = document.getElementById('slds-global-header-container');
+    if (ghContainer) ghContainer.innerHTML = getGlobalHeaderHTML();
+
+    // Inject app nav
+    const navContainer = document.getElementById('slds-app-nav-container');
+    if (navContainer) navContainer.innerHTML = getAppNavHTML(activePage);
+
+    // Inject mobile nav drawer (once per page load)
+    if (!document.getElementById('slds-mobile-nav-overlay')) {
+        document.body.insertAdjacentHTML('beforeend', getMobileNavDrawerHTML(activePage));
+    }
+
+    initNavTooltips();
+    applySidebarState();
+    ensureDataTableAssets().then(() => {
+        window.requestAnimationFrame(() => enhancePageTables(document));
+        window.setTimeout(() => enhancePageTables(document), 120);
+    });
+}
+
+// ----------------------------------------------------------------
+//  MODAL HELPERS
+// ----------------------------------------------------------------
+function openModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.style.display = 'none'; document.body.style.overflow = ''; }
+}
+
+// ----------------------------------------------------------------
+//  TABLE SORT
+// ----------------------------------------------------------------
+function sortTable(tbodyId, colIndex, type = 'string') {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const asc = tbody.dataset.sortAsc !== 'true';
+    tbody.dataset.sortAsc = asc;
+    rows.sort((a, b) => {
+        const av = a.cells[colIndex]?.textContent.trim() || '';
+        const bv = b.cells[colIndex]?.textContent.trim() || '';
+        if (type === 'number') return asc ? parseFloat(av) - parseFloat(bv) : parseFloat(bv) - parseFloat(av);
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+// ----------------------------------------------------------------
+//  TABS INTERACTION
+// ----------------------------------------------------------------
+function switchTab(tabId, paneId) {
+    // Deactivate all tabs and panes in the same container
+    const container = document.querySelector(`[data-tab="${tabId}"]`)?.closest('[data-tab-group]');
+    if (!container) return;
+    container.querySelectorAll('[data-tab]').forEach(t => t.classList.remove('active'));
+    container.querySelectorAll('[data-pane]').forEach(p => p.classList.remove('active'));
+    // Activate clicked
+    document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('active');
+    document.querySelector(`[data-pane="${paneId}"]`)?.classList.add('active');
+}
+
+// initTabs — auto-wire [data-tab] buttons to [data-pane] panels, within
+// an optional [data-tab-group] boundary.  Called by all detail pages.
+function initTabs() {
+    document.querySelectorAll('[data-tab-group]').forEach(group => {
+        const tabs = group.querySelectorAll('[data-tab]');
+        const panes = group.querySelectorAll('[data-pane]');
+
+        // Ensure at least first tab/pane is active if none is
+        if (tabs.length && ![...tabs].some(t => t.classList.contains('active'))) {
+            tabs[0].classList.add('active');
+            if (panes[0]) panes[0].classList.add('active');
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetPaneId = tab.dataset.tab;
+                tabs.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                const pane = group.querySelector(`[data-pane="${targetPaneId}"]`);
+                if (pane) pane.classList.add('active');
+            });
+        });
+    });
+
+    // Also handle loose [data-tab]/[data-pane] pairs (no group wrapper)
+    document.querySelectorAll('[data-tab]:not([data-tab-group] [data-tab])').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetId = tab.dataset.tab;
+            // find sibling tabs: share the same parent
+            const parent = tab.parentElement;
+            parent.querySelectorAll('[data-tab]').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('[data-pane]').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            const pane = document.querySelector(`[data-pane="${targetId}"]`);
+            if (pane) pane.classList.add('active');
+        });
+    });
+}

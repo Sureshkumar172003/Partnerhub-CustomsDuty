@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail View &mdash; PartnerHub</title>
+    
+    <link rel="stylesheet" href="css/slds.css">
+    
+    <!-- Ag-Grid Scripts & Styles -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .ag-theme-alpine { --ag-header-background-color: #ffffff; --ag-font-family: 'Montserrat'; width: 100%; height: 400px; }
+        .duty-tabs { border-bottom: 1px solid var(--slds-n7); display: flex; gap: 30px; padding: 0 24px; background: white; }
+        .duty-tab-item { padding: 12px 0; font-size: 11px; font-weight: 700; color: var(--slds-n4); text-transform: uppercase; border-bottom: 3px solid transparent; cursor: pointer; text-decoration: none; }
+        .duty-tab-item.active { color: var(--slds-brand-accent); border-bottom-color: var(--slds-brand-accent); }
+        
+        .hidden { display: none; }
+        .edit-mode-active { border: 2px solid var(--slds-brand-accent) !important; }
+    </style>
+</head>
+<body>
+    <div id="slds-global-header-container"></div>
+    <div id="slds-app-nav-container"></div>
+    <div id="slds-workspace-tabs-container"></div>
+
+    <div class="slds-body">
+        <!-- Header -->
+        <div class="slds-list-header">
+            <div class="slds-list-header__icon-title">
+                <div class="slds-icon-std ic-report" style="background:var(--slds-brand);">
+                    <svg fill="none" stroke="white" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div><div class="slds-list-title">Customs Duty Control</div><div class="slds-list-subtitle">DETAIL VIEW</div></div>
+            </div>
+        </div>
+
+        <div class="duty-tabs">
+            <a href="duty-upload.html" class="duty-tab-item">Upload</a>
+            <a href="duty-grid.html" class="duty-tab-item">Transaction grid</a>
+            <a href="duty-detail.html" class="duty-tab-item active">Detail view</a>
+        </div>
+
+        <div class="slds-content-lg">
+            <!-- Main Button Bar -->
+            <div style="margin-bottom: 16px; display:flex; gap:10px; flex-wrap: wrap;">
+                <button class="slds-btn slds-btn-brand slds-btn-sm">Send to WMS</button>
+                <button class="slds-btn slds-btn-neutral slds-btn-sm">Re-send updated</button>
+                
+                <!-- Clicking these enables editing -->
+                <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">Update file (partial)</button>
+                <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">Update file (full)</button>
+                
+                <button class="slds-btn slds-btn-neutral slds-btn-sm text-red-600" onclick="deleteTransaction()">Delete Transaction</button>
+                <button class="slds-btn slds-btn-neutral slds-btn-sm text-red-600" onclick="handleDeleteErrorLines()">Delete error lines</button>
+                
+                <button class="slds-btn slds-btn-neutral slds-btn-sm ml-auto" onclick="location.href='duty-grid.html'">Back to grid</button>
+            </div>
+
+            <!-- Meta Information Card -->
+            <div class="slds-card" style="margin-bottom: 16px; padding:16px;">
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div><div class="slds-kpi-label">REF #</div><div id="refNo" class="slds-text-link font-bold"></div></div>
+                    <div><div class="slds-kpi-label">STATUS</div><div id="statusBox"></div></div>
+                    <div><div class="slds-kpi-label">LINES</div><div id="lineInfo" class="font-bold"></div></div>
+                </div>
+            </div>
+
+            <!-- The Grid -->
+            <div id="detailAg" class="ag-theme-alpine"></div>
+
+            <!-- SAVE BUTTON: Only visible when editing -->
+            <div id="saveContainer" class="hidden" style="margin-top: 20px; justify-content: flex-end;">
+                <button class="slds-btn slds-btn-neutral px-8 h-10 shadow-sm" onclick="cancelUpdate()">Cancel</button>
+                <button class="slds-btn slds-btn-brand px-12 h-10 shadow-lg" onclick="processSave()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+let detApi;
+let isEditMode = false;
+const selected = JSON.parse(localStorage.getItem("selectedRow"));
+
+window.onload = () => {
+    initPage('duty-detail', 'Detail View');
+    
+    if (!selected) { 
+        window.location.href = "duty-grid.html"; 
+        return; 
+    }
+
+    // Check if we just came from a successful save
+    if (localStorage.getItem("save_success_flag") === "true") {
+        showToast("Transaction updated and saved", "success");
+        localStorage.removeItem("save_success_flag");
+    }
+
+    loadAndRender();
+};
+
+function loadAndRender() {
+    const allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
+    const detailRows = allLines.filter(r => String(r.REF).trim() === String(selected.REF).trim());
+
+    // Sync calculated fields for display
+    detailRows.forEach(r => {
+        const qty = Number(r.Qty);
+        r.STATUS = (qty === 0 || isNaN(qty)) ? "ERROR" : "VALID";
+        r.MESSAGE = (qty === 0 || isNaN(qty)) ? "Qty cannot be zero" : "";
+    });
+
+    const errorCount = detailRows.filter(r => r.STATUS === "ERROR").length;
+    document.getElementById("refNo").innerText = selected.REF;
+    document.getElementById("statusBox").innerHTML = errorCount > 0 
+        ? '<span class="slds-badge slds-badge-error">Validation error</span>' 
+        : '<span class="slds-badge slds-badge-success">Valid</span>';
+    document.getElementById("lineInfo").innerText = `${detailRows.length} (${errorCount} errors)`;
+
+    if (detApi) {
+        detApi.setGridOption('rowData', detailRows);
+    } else {
+        const gridOptions = {
+            columnDefs: [
+                { headerName: 'SKU', field: 'SKU', flex: 1, editable: () => isEditMode, cellStyle: {fontWeight:'700'} },
+                { headerName: 'QTY', field: 'Qty', width: 120, editable: () => isEditMode,
+                    cellStyle: p => ({ color: Number(p.value) === 0 ? 'red' : 'black', fontWeight: 'bold' })
+                },
+                { headerName: 'STATUS', field: 'STATUS', width: 120 },
+                { headerName: 'WMS MESSAGE', field: 'MESSAGE', flex: 1, cellStyle: {color: '#BA0517', fontStyle: 'italic'} }
+            ],
+            rowData: detailRows,
+            getRowStyle: p => (Number(p.data.Qty) === 0) ? { background: '#FEDAD0' } : null
+        };
+        detApi = agGrid.createGrid(document.querySelector('#detailAg'), gridOptions);
+    }
+}
+
+function enableEditMode() {
+    isEditMode = true;
+    const saveBox = document.getElementById('saveContainer');
+    saveBox.classList.remove('hidden');
+    saveBox.style.display = 'flex';
+    document.getElementById('detailAg').classList.add('edit-mode-active');
+    detApi.refreshCells(); 
+    showToast("Edit Mode Enabled. Change SKU or QTY directly.", "info");
+}
+
+function cancelUpdate() {
+    isEditMode = false;
+    const saveBox = document.getElementById('saveContainer');
+    saveBox.classList.add('hidden');
+    saveBox.style.display = 'none';
+    document.getElementById('detailAg').classList.remove('edit-mode-active');
+    window.location.reload();
+}
+
+function processSave() {
+    detApi.stopEditing();
+
+    let allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
+    let updatedGridRows = [];
+    
+    detApi.forEachNode(node => {
+        let row = node.data;
+        row.REF = selected.REF; 
+        updatedGridRows.push(row);
+    });
+
+    const otherData = allLines.filter(l => String(l.REF).trim() !== String(selected.REF).trim());
+    const finalMasterList = [...otherData, ...updatedGridRows];
+    localStorage.setItem("uploadedData", JSON.stringify(finalMasterList));
+    
+    let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+    transactions.forEach(t => {
+        if (String(t.REF).trim() === String(selected.REF).trim()) {
+            t.lines = updatedGridRows.length;
+            const hasError = updatedGridRows.some(l => Number(l.Qty) === 0 || !l.Qty);
+            t.status = hasError ? "ERROR" : "UPLOADED";
+        }
+    });
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+
+    localStorage.setItem("save_success_flag", "true");
+    const saveBox = document.getElementById('saveContainer');
+    saveBox.classList.add('hidden');
+    saveBox.style.display = 'none';
+    window.location.reload();
+}
+
+function deleteTransaction() {
+    if (!confirm("Confirm complete deletion of this transaction batch?")) return;
+    let txns = JSON.parse(localStorage.getItem("transactions")) || [];
+    let lines = JSON.parse(localStorage.getItem("uploadedData")) || [];
+    localStorage.setItem("transactions", JSON.stringify(txns.filter(t => t.REF !== selected.REF)));
+    localStorage.setItem("uploadedData", JSON.stringify(lines.filter(l => l.REF !== selected.REF)));
+    window.location.href = "duty-grid.html";
+}
+
+function handleDeleteErrorLines() {
+    const rowData = [];
+    detApi.forEachNode(node => rowData.push(node.data));
+    const errors = rowData.filter(r => r.STATUS === "ERROR");
+
+    if (errors.length === 0) {
+        showToast("No errors found to delete.", "warning");
+        return;
+    }
+
+    if (confirm("Delete all lines marked as ERROR?")) {
+        let allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
+        const cleaned = allLines.filter(l => !(String(l.REF) === String(selected.REF) && Number(l.Qty) === 0));
+        localStorage.setItem("uploadedData", JSON.stringify(cleaned));
+
+        let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+        const myLeftLines = cleaned.filter(l => String(l.REF) === String(selected.REF));
+        transactions.forEach(t => {
+            if (String(t.REF) === String(selected.REF)) {
+                t.lines = myLeftLines.length;
+                t.status = "UPLOADED"; 
+            }
+        });
+        localStorage.setItem("transactions", JSON.stringify(transactions));
+        
+        window.location.reload();
+    }
+}
+</script>
+</body>
+</html>

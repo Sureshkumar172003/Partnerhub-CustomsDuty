@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Upload &mdash; PartnerHub</title>
+    <link rel="stylesheet" href="css/slds.css">
+    <style>
+        .duty-tabs { border-bottom: 1px solid var(--slds-n7); display: flex; gap: 30px; padding: 0 24px; background: white; }
+        .duty-tab-item { padding: 12px 0; font-size: 11px; font-weight: 700; color: var(--slds-n4); text-transform: uppercase; border-bottom: 3px solid transparent; cursor: pointer; text-decoration: none; }
+        .duty-tab-item.active { color: var(--slds-brand-accent); border-bottom-color: var(--slds-brand-accent); }
+        .file-drop-zone { border: 2px dashed var(--slds-n7); border-radius: 6px; padding: 60px; text-align: center; cursor: pointer; background: var(--slds-n10); transition: 0.2s; }
+        .file-drop-zone:hover { border-color: var(--slds-brand); background: #f0f7ff; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div id="slds-global-header-container"></div>
+    <div id="slds-app-nav-container"></div>
+    <div id="slds-workspace-tabs-container"></div>
+
+    <div class="slds-body">
+        <div class="slds-list-header">
+            <div class="slds-list-header__icon-title">
+                <div class="slds-icon-std ic-product"><svg fill="none" stroke="white" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div>
+                    <div class="slds-list-title">Customs Duty Control</div>
+                    <div class="slds-list-subtitle">UPLOAD SCREEN</div>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="duty-tabs">
+            <a href="duty-upload.html" class="duty-tab-item active">Upload</a>
+            <a href="duty-grid.html" class="duty-tab-item">Transaction grid</a>
+            <a href="duty-detail.html" class="duty-tab-item">Detail view</a>
+        </div>
+
+        <div class="slds-content-lg">
+            <div class="slds-card" style="padding: 24px; margin: 0;">
+                <h3 class="slds-form-section-title" style="margin-top:0;">UPLOAD DETAILS</h3>
+                <div class="form-row">
+                    <div class="slds-form-element">
+                        <label class="slds-form-label">UPLOAD NAME<span style="color:red;">*</span></label>
+                        <input id="uploadName" class="slds-input" type="text" value="Weekly batch - STR01">
+                    </div>
+                <div class="slds-form-element">
+                    <label class="slds-form-label">TYPE<span style="color:red;">*</span></label>
+                        <select id="typeSelect" class="slds-select">
+                        <option value="">Select Order Type</option> 
+                        <option value="Sales order">Sales order</option>
+                        <option value="Return order">Return order</option>
+                        </select>
+                </div>
+                <div class="slds-form-element">
+                    <label class="slds-form-label">STORE<span style="color:red;">*</span></label>
+                        <select id="storeSelect" class="slds-select">
+                        <option value="">Select Store</option>
+                        <option value="STR-001">STR-001</option>
+                        <option value="STR-002">STR-002</option>
+                        <option value="STR-003">STR-003</option>
+                        <option value="STR-004">STR-004</option>
+                        </select>
+                </div>
+                <div class="slds-form-element">
+                    <label class="slds-form-label">PRIORITY<span style="color:red;">*</span></label>
+                        <select id="prioritySelect" class="slds-select">
+                        <option value="">Select Priority</option>
+                        <option value="Normal">Normal</option>
+                        <option value="High">High</option>
+                        </select>
+                </div>
+                </div>
+                <div class="slds-form-element">
+                    <label class="slds-form-label">NOTES</label>
+                    <textarea class="slds-textarea" placeholder="Optional remarks"></textarea>
+                </div>
+                
+                <div class="file-drop-zone" 
+                    id="dropZone"
+                    onclick="document.getElementById('fInp').click()"
+                    ondragover="event.preventDefault(); this.style.borderColor='#0176d3'; this.style.backgroundColor='#f0f7ff';"
+                    ondragleave="this.style.borderColor='var(--slds-n7)'; this.style.backgroundColor='var(--slds-n10)';"
+                    ondrop="handleDrop(event)">
+    
+                    <input type="file" id="fInp" style="display:none;" onchange="handleFile(event)">
+
+                    <div style="color:var(--slds-n4); margin-bottom: 10px;">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                    </div>
+    
+                    <div id="fileNameText" style="font-weight:500; color:var(--slds-n3);">
+                        Drag & drop files here or <span class="slds-text-link" style="text-decoration: underline;">browse</span>
+                    </div>
+                    <div style="font-size: 10px; color: var(--slds-n5); margin-top: 5px;">
+                        Accepted: .csv, .xlsx • Max 10MB
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:24px;">
+                    <button class="slds-btn slds-btn-brand px-10" onclick="submitData()">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+    <script>initPage('duty-upload', 'Customs Duty Control');</script>
+    <script>
+let parsedData = []; 
+
+function handleFile(event) {
+    const file = event.target ? event.target.files[0] : event[0];
+    if (!file) return;
+
+    // Show file name
+    document.getElementById("fileNameText").innerHTML = `Selected: <strong>${file.name}</strong>`;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const text = e.target.result;
+
+        const rows = text.split("\n").map(r => r.trim()).filter(r => r);
+        const headers = rows[0].split(",");
+
+        parsedData = rows.slice(1).map(row => {
+            const values = row.split(",");
+            let obj = {};
+            headers.forEach((h, i) => {
+                obj[h.trim().replace(/\s+/g, '')] = values[i]?.trim();
+            });
+            return obj;
+        });
+    showToast("File parsed successfully", "info");
+    };
+
+    reader.readAsText(file);
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    const zone = document.getElementById('dropZone');
+    zone.style.borderColor = 'var(--slds-n7)';
+    zone.style.backgroundColor = 'var(--slds-n10)';
+
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files); 
+    }
+}
+
+function submitData() {
+
+    const name = document.getElementById("uploadName").value.trim();
+    const type = document.getElementById("typeSelect").value;
+    const store = document.getElementById("storeSelect").value;
+    const priority = document.getElementById("prioritySelect").value;
+
+    if (!name) {
+        showToast("Upload Name is mandatory", "error");
+        return;
+    }
+    if (!type) {
+        showToast("Please select a Transaction Type", "error");
+        return;
+    }
+    if (!store) {
+        showToast("Please select a Store", "error");
+        return;
+    }
+    if (!priority) {
+        showToast("Please select a Priority", "error");
+        return;
+    }
+
+    if (parsedData.length === 0) {
+        showToast("Please upload a CSV file before submitting", "error");
+        return;
+    }
+
+    const refNo = "TXN-" + Date.now();
+
+    const rowsWithRef = parsedData.map(r => ({
+        ...r,
+        REF: refNo
+    }));
+
+    const hasError = parsedData.some(row => {
+    const qty = Number(row.Qty);
+    return qty === 0;
+});
+    const transaction = {
+        REF: refNo,
+        uploadName: name,
+        type: type,
+        store: store,
+        lines: parsedData.length,
+        status: hasError ? "ERROR":"UPLOADED",
+        uploadedAt: new Date().toISOString()
+    };
+
+    let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+    let allRows = JSON.parse(localStorage.getItem("uploadedData")) || [];
+
+    transactions.push(transaction);
+    allRows.push(...rowsWithRef);
+
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+    localStorage.setItem("uploadedData", JSON.stringify(allRows));
+
+    showToast("Transaction created successfully!", "success");
+
+    document.getElementById("uploadName").value = "Weekly batch - STR01";
+    document.getElementById("typeSelect").value = "";
+    document.getElementById("storeSelect").value = "";
+    document.getElementById("prioritySelect").value = "";
+    
+    const textarea = document.querySelector('.slds-textarea');
+    if (textarea) {
+        textarea.value = "";
+    }
+
+    parsedData = [];
+
+    document.getElementById("fInp").value = "";
+    document.getElementById("fileNameText").innerHTML = `Drag & drop files here or <span class="slds-text-link" style="text-decoration: underline;">browse</span>`;
+
+    
+}
+
+</script>
+</body>
+</html>
