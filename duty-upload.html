@@ -127,8 +127,16 @@ function handleFile(event) {
             const values = row.split(",");
             let obj = {};
             headers.forEach((h, i) => {
-                obj[h.trim().replace(/\s+/g, '')] = values[i]?.trim();
-            });
+        let key = h.trim();
+        // Standardize the keys for the detail view
+        if (key.toLowerCase() === 'sku') key = 'SKU';
+        if (key.toLowerCase() === 'uom') key = 'UOM';
+        if (key.toLowerCase() === 'qty') key = 'Qty';
+        if (key.toLowerCase() === 'ship to') key = 'ShipTo'; 
+        if (key.toLowerCase() === 'required date') key = 'ReqDate';
+        
+        obj[key] = values[i]?.trim();
+    });
             return obj;
         });
     showToast("File parsed successfully", "info");
@@ -186,14 +194,14 @@ function submitData() {
     }));
 
     const hasError = parsedData.some(row => {
-    const qty = Number(row.Qty);
-    return qty === 0;
+    return !row.SKU || !row.UOM || Number(row.Qty) === 0 || !row.ShipTo || !row.ReqDate;
 });
     const transaction = {
         REF: refNo,
         uploadName: name,
         type: type,
         store: store,
+        priority: priority,
         lines: parsedData.length,
         status: hasError ? "ERROR":"UPLOADED",
         uploadedAt: new Date().toISOString()

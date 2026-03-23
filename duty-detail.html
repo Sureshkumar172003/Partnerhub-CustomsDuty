@@ -56,20 +56,53 @@
                 <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">Update file (partial)</button>
                 <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">Update file (full)</button>
                 
-                <button class="slds-btn slds-btn-neutral slds-btn-sm text-red-600" onclick="deleteTransaction()">Delete Transaction</button>
+                <button class="slds-btn slds-btn-neutral slds-btn-sm text-red-600" onclick="deleteSelectedLines()">Delete Transaction</button>
                 <button class="slds-btn slds-btn-neutral slds-btn-sm text-red-600" onclick="handleDeleteErrorLines()">Delete error lines</button>
                 
                 <button class="slds-btn slds-btn-neutral slds-btn-sm ml-auto" onclick="location.href='duty-grid.html'">Back to grid</button>
             </div>
 
             <!-- Meta Information Card -->
-            <div class="slds-card" style="margin-bottom: 16px; padding:16px;">
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                    <div><div class="slds-kpi-label">REF #</div><div id="refNo" class="slds-text-link font-bold"></div></div>
-                    <div><div class="slds-kpi-label">STATUS</div><div id="statusBox"></div></div>
-                    <div><div class="slds-kpi-label">LINES</div><div id="lineInfo" class="font-bold"></div></div>
-                </div>
-            </div>
+            <div class="slds-card" style="margin-bottom: 16px; padding:20px; font-size: 12px; color: #444;">
+    <div class="grid grid-cols-3 gap-x-12 gap-y-4">
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Ref #</p>
+            <p id="refNo" class="font-bold text-blue-600 underline"></p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Upload name</p>
+            <p id="uploadNameDisplay" class="font-bold"></p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Type</p>
+            <span id="typeBadge" class="slds-badge slds-badge-info"></span>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Store</p>
+            <p id="storeDisplay" class="font-bold"></p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Status</p>
+            <div id="statusBox"></div>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Lines</p>
+            <p id="lineInfo" class="font-bold"></p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Uploaded</p>
+            <p id="uploadedAtDisplay" class="font-bold text-slate-500"></p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Last update</p>
+            <p id="lastUpdateDisplay" class="font-bold text-slate-500"></p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Priority</p>
+            <p id="priorityDisplay" class="font-bold"></p>
+        </div>
+    </div>
+</div>
 
             <!-- The Grid -->
             <div id="detailAg" class="ag-theme-alpine"></div>
@@ -96,9 +129,8 @@ window.onload = () => {
         return; 
     }
 
-    // Check if we just came from a successful save
     if (localStorage.getItem("save_success_flag") === "true") {
-        showToast("Transaction updated and saved", "success");
+        showToast("Transaction updated and saved successfully", "success");
         localStorage.removeItem("save_success_flag");
     }
 
@@ -109,55 +141,96 @@ function loadAndRender() {
     const allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
     const detailRows = allLines.filter(r => String(r.REF).trim() === String(selected.REF).trim());
 
-    // Sync calculated fields for display
     detailRows.forEach(r => {
-        const qty = Number(r.Qty);
-        r.STATUS = (qty === 0 || isNaN(qty)) ? "ERROR" : "VALID";
-        r.MESSAGE = (qty === 0 || isNaN(qty)) ? "Qty cannot be zero" : "";
-    });
+    let errorMsgs = [];
+    if (!r.SKU) errorMsgs.push("SKU required");
+    if (!r.UOM) errorMsgs.push("UOM required");
+    if (Number(r.Qty) === 0 || !r.Qty) errorMsgs.push("Qty cannot be zero");
+    if (!r.ShipTo) errorMsgs.push("Ship_to required");
+    if (!r.ReqDate) errorMsgs.push("Date required");
+
+    if (errorMsgs.length > 0) {
+        r.STATUS = "ERROR";
+        r.MESSAGE = errorMsgs.join(", ");
+    } else {
+        r.STATUS = "VALID";
+        r.MESSAGE = "";
+    }
+});
 
     const errorCount = detailRows.filter(r => r.STATUS === "ERROR").length;
     document.getElementById("refNo").innerText = selected.REF;
+    document.getElementById("uploadNameDisplay").innerText = selected.uploadName || "N/A";
+    document.getElementById("typeBadge").innerText = (selected.type || "Sales").toUpperCase();
+    document.getElementById("storeDisplay").innerText = selected.store || "N/A";
+    document.getElementById("priorityDisplay").innerText = selected.priority || "Normal";
+    document.getElementById("uploadedAtDisplay").innerText = selected.uploadedAt ? selected.uploadedAt.split('T')[0] : "";
+    document.getElementById("lineInfo").innerText = `${detailRows.length} (${errorCount} errors)`;
+    document.getElementById("lastUpdateDisplay").innerText = selected.lastUpdate || "Not updated yet";
     document.getElementById("statusBox").innerHTML = errorCount > 0 
         ? '<span class="slds-badge slds-badge-error">Validation error</span>' 
         : '<span class="slds-badge slds-badge-success">Valid</span>';
-    document.getElementById("lineInfo").innerText = `${detailRows.length} (${errorCount} errors)`;
+
+    const colDefs = [
+        { 
+            headerName: '', 
+            checkboxSelection: true, 
+            headerCheckboxSelection: true, // Select all checkbox
+            width: 50 
+        },
+        { headerName: 'LINE', valueGetter: "node.rowIndex + 1", width: 70 },
+        { 
+            headerName: 'SKU', 
+            field: 'SKU', 
+            flex: 1, 
+            editable: () => isEditMode, 
+            cellStyle: { fontWeight: '600', color: '#181818', fontSize: '14px' } 
+        },
+        { 
+            headerName: 'QTY', 
+            field: 'Qty', 
+            width: 100, 
+            editable: () => isEditMode,
+            cellStyle: p => ({ 
+                color: Number(p.value) === 0 ? 'red' : '#181818', 
+                fontWeight: '700', 
+                fontSize: '14px' 
+            })
+        },
+        { headerName: 'UOM', field: 'UOM', width: 90, editable: () => isEditMode },
+        { headerName: 'SHIP TO', field: 'ShipTo', width: 130, editable: () => isEditMode },
+        { headerName: 'REQ. DATE', field: 'ReqDate', width: 130, editable: () => isEditMode },
+        { 
+            headerName: 'STATUS', 
+            field: 'STATUS', 
+            width: 110,
+            cellRenderer: p => `<span class="${p.value==='ERROR'?'text-red-600':'text-green-600'} font-bold">${p.value}</span>`
+        },
+        { headerName: 'WMS MESSAGE', field: 'MESSAGE', flex: 1.5, cellStyle: {color: '#BA0517', fontStyle: 'italic', fontSize: '13px'} }
+    ];
 
     if (detApi) {
         detApi.setGridOption('rowData', detailRows);
     } else {
-        const gridOptions = {
-            columnDefs: [
-                { headerName: 'SKU', field: 'SKU', flex: 1, editable: () => isEditMode, cellStyle: {fontWeight:'700'} },
-                { headerName: 'QTY', field: 'Qty', width: 120, editable: () => isEditMode,
-                    cellStyle: p => ({ color: Number(p.value) === 0 ? 'red' : 'black', fontWeight: 'bold' })
-                },
-                { headerName: 'STATUS', field: 'STATUS', width: 120 },
-                { headerName: 'WMS MESSAGE', field: 'MESSAGE', flex: 1, cellStyle: {color: '#BA0517', fontStyle: 'italic'} }
-            ],
+        detApi = agGrid.createGrid(document.querySelector('#detailAg'), {
+            columnDefs: colDefs,
             rowData: detailRows,
-            getRowStyle: p => (Number(p.data.Qty) === 0) ? { background: '#FEDAD0' } : null
-        };
-        detApi = agGrid.createGrid(document.querySelector('#detailAg'), gridOptions);
+            rowSelection: 'multiple',
+            getRowStyle: p => (p.data.STATUS === "ERROR") ? { background: '#FEDAD0' } : null
+        });
     }
+    setTimeout(() => detApi.sizeColumnsToFit(), 100);
 }
 
 function enableEditMode() {
     isEditMode = true;
-    const saveBox = document.getElementById('saveContainer');
-    saveBox.classList.remove('hidden');
-    saveBox.style.display = 'flex';
-    document.getElementById('detailAg').classList.add('edit-mode-active');
+    document.getElementById('saveContainer').classList.remove('hidden');
+    document.getElementById('detailAg').style.border = "2px solid var(--slds-brand-accent)";
     detApi.refreshCells(); 
-    showToast("Edit Mode Enabled. Change SKU or QTY directly.", "info");
+    showToast("Update Mode Active", "info");
 }
 
 function cancelUpdate() {
-    isEditMode = false;
-    const saveBox = document.getElementById('saveContainer');
-    saveBox.classList.add('hidden');
-    saveBox.style.display = 'none';
-    document.getElementById('detailAg').classList.remove('edit-mode-active');
     window.location.reload();
 }
 
@@ -174,63 +247,67 @@ function processSave() {
     });
 
     const otherData = allLines.filter(l => String(l.REF).trim() !== String(selected.REF).trim());
-    const finalMasterList = [...otherData, ...updatedGridRows];
-    localStorage.setItem("uploadedData", JSON.stringify(finalMasterList));
+    localStorage.setItem("uploadedData", JSON.stringify([...otherData, ...updatedGridRows]));
+
+    const timestamp = new Date().toLocaleString([], { hour: '2-digit', minute: '2-digit', hour12: true });
     
     let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
     transactions.forEach(t => {
         if (String(t.REF).trim() === String(selected.REF).trim()) {
             t.lines = updatedGridRows.length;
-            const hasError = updatedGridRows.some(l => Number(l.Qty) === 0 || !l.Qty);
-            t.status = hasError ? "ERROR" : "UPLOADED";
+    
+            const currentlyHasErrors = updatedGridRows.some(l => {
+                const q = Number(l.Qty);
+                return !l.SKU || !l.UOM || q === 0 || isNaN(q) || !l.ShipTo || !l.ReqDate;
+            });
+            
+            t.status = currentlyHasErrors ? "ERROR" : "UPLOADED";
+            t.lastUpdate = timestamp; 
         }
     });
     localStorage.setItem("transactions", JSON.stringify(transactions));
-
+    selected.lastUpdate = timestamp;
+    localStorage.setItem("selectedRow", JSON.stringify(selected));
     localStorage.setItem("save_success_flag", "true");
-    const saveBox = document.getElementById('saveContainer');
-    saveBox.classList.add('hidden');
-    saveBox.style.display = 'none';
     window.location.reload();
 }
 
-function deleteTransaction() {
-    if (!confirm("Confirm complete deletion of this transaction batch?")) return;
-    let txns = JSON.parse(localStorage.getItem("transactions")) || [];
-    let lines = JSON.parse(localStorage.getItem("uploadedData")) || [];
-    localStorage.setItem("transactions", JSON.stringify(txns.filter(t => t.REF !== selected.REF)));
-    localStorage.setItem("uploadedData", JSON.stringify(lines.filter(l => l.REF !== selected.REF)));
-    window.location.href = "duty-grid.html";
+function deleteSelectedLines() {
+    const selectedRows = detApi.getSelectedRows();
+    if (selectedRows.length === 0) {
+        showToast("Please select lines to delete", "warning");
+        return;
+    }
+
+    if (confirm(`Delete ${selectedRows.length} selected lines?`)) {
+        // Remove from Grid first
+        detApi.applyTransaction({ remove: selectedRows });
+        // Save current clean state of Grid to LocalStorage
+        processSave();
+    }
 }
 
 function handleDeleteErrorLines() {
-    const rowData = [];
-    detApi.forEachNode(node => rowData.push(node.data));
-    const errors = rowData.filter(r => r.STATUS === "ERROR");
+    const allNodes = [];
+    detApi.forEachNode(node => allNodes.push(node.data));
+    const errors = allNodes.filter(r => r.STATUS === "ERROR");
 
     if (errors.length === 0) {
         showToast("No errors found to delete.", "warning");
         return;
     }
 
-    if (confirm("Delete all lines marked as ERROR?")) {
-        let allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
-        const cleaned = allLines.filter(l => !(String(l.REF) === String(selected.REF) && Number(l.Qty) === 0));
-        localStorage.setItem("uploadedData", JSON.stringify(cleaned));
-
-        let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-        const myLeftLines = cleaned.filter(l => String(l.REF) === String(selected.REF));
-        transactions.forEach(t => {
-            if (String(t.REF) === String(selected.REF)) {
-                t.lines = myLeftLines.length;
-                t.status = "UPLOADED"; 
-            }
-        });
-        localStorage.setItem("transactions", JSON.stringify(transactions));
-        
-        window.location.reload();
+    if (confirm("Delete all error lines?")) {
+        detApi.applyTransaction({ remove: errors });
+        processSave();
     }
 }
+
+// Redirect back to grid properly
+function backToGrid() {
+    window.location.href = "duty-grid.html";
+}
+</script>
 </script>
 </body>
 </html>
