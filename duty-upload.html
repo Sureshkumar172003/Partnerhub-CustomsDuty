@@ -4,13 +4,57 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Upload &mdash; PartnerHub</title>
     <link rel="stylesheet" href="css/slds.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .duty-tabs { border-bottom: 1px solid var(--slds-n7); display: flex; gap: 30px; padding: 0 24px; background: white; }
         .duty-tab-item { padding: 12px 0; font-size: 11px; font-weight: 700; color: var(--slds-n4); text-transform: uppercase; border-bottom: 3px solid transparent; cursor: pointer; text-decoration: none; }
         .duty-tab-item.active { color: var(--slds-brand-accent); border-bottom-color: var(--slds-brand-accent); }
-        .file-drop-zone { border: 2px dashed var(--slds-n7); border-radius: 6px; padding: 60px; text-align: center; cursor: pointer; background: var(--slds-n10); transition: 0.2s; }
+        .file-drop-zone { border: 2px dashed var(--slds-n7); border-radius: 6px; padding: 30px; text-align: center; cursor: pointer; background: var(--slds-n10); transition: 0.2s; }
         .file-drop-zone:hover { border-color: var(--slds-brand); background: #f0f7ff; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 20px; }
+        .smart-radio {
+    cursor: pointer;
+    margin: 0;
+}
+
+.smart-radio input[type="radio"] {
+    display: none;
+}
+
+.smart-radio-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5563;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.smart-radio-label i {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.smart-radio:hover .smart-radio-label {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+}
+
+.smart-radio input[type="radio"]:checked + .smart-radio-label {
+    background: #0176d3;
+    border-color: #0176d3;
+    color: white;
+}
+
+.smart-radio input[type="radio"]:checked + .smart-radio-label i {
+    color: white;
+}
     </style>
 </head>
 <body>
@@ -45,13 +89,22 @@
                         <input id="uploadName" class="slds-input" type="text" value="Weekly batch - STR01">
                     </div>
                 <div class="slds-form-element">
-                    <label class="slds-form-label">TYPE<span style="color:red;">*</span></label>
-                        <select id="typeSelect" class="slds-select">
-                        <option value="">Select Order Type</option> 
-                        <option value="Sales order">Sales order</option>
-                        <option value="Return order">Return order</option>
-                        </select>
-                </div>
+    <label class="slds-form-label">TYPE<span style="color:red;">*</span></label>
+    <div style="display: flex; gap: 12px; margin-top: 6px;">
+        <label class="smart-radio">
+            <input type="radio" name="orderType" value="Sales order" checked>
+            <span class="smart-radio-label">
+                <i class="fas fa-shopping-cart"></i> Sales
+            </span>
+        </label>
+        <label class="smart-radio">
+            <input type="radio" name="orderType" value="Return order">
+            <span class="smart-radio-label">
+                <i class="fas fa-undo-alt"></i> Return
+            </span>
+        </label>
+    </div>
+</div>
                 <div class="slds-form-element">
                     <label class="slds-form-label">STORE<span style="color:red;">*</span></label>
                         <select id="storeSelect" class="slds-select">
@@ -62,18 +115,16 @@
                         <option value="STR-004">STR-004</option>
                         </select>
                 </div>
-                <div class="slds-form-element">
-                    <label class="slds-form-label">PRIORITY<span style="color:red;">*</span></label>
-                        <select id="prioritySelect" class="slds-select">
-                        <option value="">Select Priority</option>
-                        <option value="Normal">Normal</option>
-                        <option value="High">High</option>
-                        </select>
-                </div>
                 </div>
                 <div class="slds-form-element">
                     <label class="slds-form-label">NOTES</label>
                     <textarea class="slds-textarea" placeholder="Optional remarks"></textarea>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <a href="#" onclick="downloadUploadedFile()" class="slds-text-link" style="font-weight:600;">
+                        ⬇ Download Excel Format
+                    </a>
                 </div>
                 
                 <div class="file-drop-zone" 
@@ -86,7 +137,7 @@
                     <input type="file" id="fInp" style="display:none;" onchange="handleFile(event)">
 
                     <div style="color:var(--slds-n4); margin-bottom: 10px;">
-                        <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 20px; color: var(--slds-brand);"></i>
                     </div>
     
                     <div id="fileNameText" style="font-weight:500; color:var(--slds-n3);">
@@ -98,51 +149,195 @@
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:24px;">
-                    <button class="slds-btn slds-btn-brand px-10" onclick="submitData()">Submit</button>
+                    <button class="slds-btn slds-btn-brand" style="padding: 0 24px;" onclick="submitData()">Submit</button>
                 </div>
             </div>
         </div>
     </div>
     <script src="js/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script>initPage('duty-upload', 'Customs Duty Control');</script>
     <script>
 let parsedData = []; 
+let hasValidationError = false;
+
+function resetFileInput() {
+    document.getElementById("fInp").value = "";
+    document.getElementById("fileNameText").innerHTML =
+        `Drag & drop files here or <span class="slds-text-link" style="text-decoration: underline;">browse</span>`;
+    window.uploadedFile = null;
+}
 
 function handleFile(event) {
     const file = event.target ? event.target.files[0] : event[0];
     if (!file) return;
+
+    const allowedTypes = ['csv', 'xlsx'];
+    const fileName = file.name.toLowerCase();
+    const fileExt = fileName.split('.').pop();
+
+    if (!allowedTypes.includes(fileExt)) {
+        showToast("Only CSV and XLSX files are allowed", "error");
+        parsedData = [];
+        document.getElementById("fInp").value = "";
+        document.getElementById("fileNameText").innerHTML =
+            `Drag & drop files here or <span class="slds-text-link">browse</span>`;
+        return;
+    }
+
+    window.uploadedFile = file;
 
     // Show file name
     document.getElementById("fileNameText").innerHTML = `Selected: <strong>${file.name}</strong>`;
 
     const reader = new FileReader();
 
-    reader.onload = function(e) {
+reader.onload = function(e) {
+    let rows = [];
+
+    // ✅ CSV handling
+    if (fileExt === 'csv') {
         const text = e.target.result;
+        rows = text.split("\n").map(r => r.trim()).filter(r => r).map(r => r.split(","));
+    }
 
-        const rows = text.split("\n").map(r => r.trim()).filter(r => r);
-        const headers = rows[0].split(",");
+    // ✅ XLSX handling
+    else if (fileExt === 'xlsx') {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
 
-        parsedData = rows.slice(1).map(row => {
-            const values = row.split(",");
-            let obj = {};
-            headers.forEach((h, i) => {
-        let key = h.trim();
-        // Standardize the keys for the detail view
-        if (key.toLowerCase() === 'sku') key = 'SKU';
-        if (key.toLowerCase() === 'uom') key = 'UOM';
-        if (key.toLowerCase() === 'qty') key = 'Qty';
-        if (key.toLowerCase() === 'ship to') key = 'ShipTo'; 
-        if (key.toLowerCase() === 'required date') key = 'ReqDate';
-        
-        obj[key] = values[i]?.trim();
-    });
-            return obj;
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" })
+    .map(r => r.map(c => String(c).trim()));
+    }
+
+    if (rows.length === 0) {
+        showToast("File is empty or invalid", "error");
+        hasValidationError = true;
+        resetFileInput();
+        return;
+    }
+
+    const headers = rows[0];
+
+    const requiredHeaders = [
+        'Store Code',
+        'Store Name',
+        'Sale Date',
+        'Item SKU',
+        'Item Description',
+        'Qty',
+        'Unit Price',
+        'Total Price',
+        'Mode'
+    ];
+
+    const normalizedHeaders = headers.map(h => String(h).trim().toLowerCase());
+
+    const isValid = requiredHeaders.every(req =>
+        normalizedHeaders.includes(req.toLowerCase())
+    );
+
+    if (!isValid) {
+        showToast("Invalid file format. Required columns missing.", "error");
+        parsedData = [];
+        hasValidationError = true;
+        resetFileInput();
+        return;
+    }
+
+    parsedData = rows.slice(1).map(row => {
+        let obj = {};
+        headers.forEach((h, i) => {
+            let key = String(h).trim().toLowerCase();
+
+            if (key === 'store code') key = 'StoreCode';
+            else if (key === 'store name') key = 'StoreName';
+            else if (key === 'sale date') key = 'SaleDate';
+            else if (key === 'item sku') key = 'SKU';
+            else if (key === 'item description') key = 'Description';
+            else if (key === 'qty') key = 'Qty';
+            else if (key === 'unit price') key = 'UnitPrice';
+            else if (key === 'total price') key = 'TotalPrice';
+
+            obj[key] = row[i];
         });
-    showToast("File parsed successfully", "info");
-    };
+        return obj;
+    });
 
+    hasValidationError = false;
+
+
+const normalize = val => String(val || "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase();
+
+const selectedStore = normalize(document.getElementById("storeSelect").value);
+if (!selectedStore) {
+    showToast("Please select Store before uploading file", "error");
+    hasValidationError = true;
+    resetFileInput();
+    return;
+}
+
+const fileStores = parsedData
+    .map(r => normalize(r.StoreCode))
+    .filter(code => code !== ""); 
+
+const uniqueStores = [...new Set(fileStores)];
+
+if (uniqueStores.length > 1) {
+    showToast("Multiple Store Codes found in file. Only one store allowed.", "error");
+    parsedData = [];
+    hasValidationError = true;
+    resetFileInput();
+    return;
+}
+
+if (selectedStore && uniqueStores[0] !== selectedStore) {
+    showToast("File Store Code does not match selected Store", "error");
+    parsedData = [];
+    hasValidationError = true;
+    resetFileInput();
+    return;
+}
+
+const invalidRow = parsedData.find((row, index) => {
+    const qty = Number(row.Qty);
+
+    if (!row.StoreCode || !row.SaleDate || !row.SKU || !row.Qty) {
+        showToast("Missing required fields", "error");
+        hasValidationError = true;
+        resetFileInput();
+        return true;
+    }
+
+    if (isNaN(qty) || qty <= 0) {
+        showToast("Qty must be greater than 0", "error");
+        hasValidationError = true;
+        resetFileInput();
+        return true;
+    }
+
+    return false;
+});
+
+if (invalidRow) {
+    parsedData = [];
+    return;
+}
+
+    showToast("File parsed successfully", "success");
+};
+
+if (fileExt === 'csv') {
     reader.readAsText(file);
+} else {
+    reader.readAsArrayBuffer(file);
+}
+
 }
 
 function handleDrop(event) {
@@ -157,12 +352,37 @@ function handleDrop(event) {
     }
 }
 
+function downloadUploadedFile() {
+    const headers = ['Store Code', 'Store Name', 'Sale Date', 'Item SKU', 'Item Description', 'Qty', 'Unit Price', 'Total Price'];
+    
+    // Sample data matching your image format
+    const sampleData = [
+        ['STR001', 'DM', '46167', 'IU5011-M', 'IU5011-M', 5, 150, 750],
+        ['STR001', 'DM', '46168', 'IS4937-140', 'IS4937-140', 2, 200, 400],
+        ['STR001', 'ME', '46168', 'SKU98765', 'SKU98765', 2, 1100, 2200],
+        ['STR001', 'ME', '46170', 'IS4937-140', 'IS4937-140', 1, 200, 200],
+        ['STR001', 'AUH', '46167', 'HP3206-9', 'HP3206-9', 4, 500, 2000],
+        ['STR001', 'AUH', '46168', 'IU5011-M', 'IU5011-M', 3, 150, 450]
+    ];
+    
+    // Download as Excel (XLSX)
+    const wsData = [headers, ...sampleData];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Upload Template');
+    
+    // Auto-size columns
+    ws['!cols'] = headers.map(() => ({ wch: 15 }));
+    
+    XLSX.writeFile(wb, 'upload_template.xlsx');
+    showToast("Excel template downloaded successfully", "success");
+}
+
 function submitData() {
 
     const name = document.getElementById("uploadName").value.trim();
-    const type = document.getElementById("typeSelect").value;
+    const type = document.querySelector('input[name="orderType"]:checked')?.value;
     const store = document.getElementById("storeSelect").value;
-    const priority = document.getElementById("prioritySelect").value;
 
     if (!name) {
         showToast("Upload Name is mandatory", "error");
@@ -176,15 +396,16 @@ function submitData() {
         showToast("Please select a Store", "error");
         return;
     }
-    if (!priority) {
-        showToast("Please select a Priority", "error");
+
+    if (hasValidationError) {
+        showToast("Please fix validation errors before submitting", "error");
         return;
     }
 
     if (parsedData.length === 0) {
-        showToast("Please upload a CSV file before submitting", "error");
+        showToast("Please upload a CSV or XLSX file before submitting", "error");
         return;
-    }
+    }  
 
     const refNo = "TXN-" + Date.now();
 
@@ -194,14 +415,13 @@ function submitData() {
     }));
 
     const hasError = parsedData.some(row => {
-    return !row.SKU || !row.UOM || Number(row.Qty) === 0 || !row.ShipTo || !row.ReqDate;
+    return !row.StoreCode || !row.SKU || Number(row.Qty) <= 0 || !row.UnitPrice;
 });
     const transaction = {
         REF: refNo,
         uploadName: name,
         type: type,
         store: store,
-        priority: priority,
         lines: parsedData.length,
         status: hasError ? "ERROR":"UPLOADED",
         uploadedAt: new Date().toISOString()
@@ -216,12 +436,12 @@ function submitData() {
     localStorage.setItem("transactions", JSON.stringify(transactions));
     localStorage.setItem("uploadedData", JSON.stringify(allRows));
 
-    showToast("Transaction created successfully!", "success");
+    showToast(`${refNo} created successfully!`, "success");
 
     document.getElementById("uploadName").value = "Weekly batch - STR01";
-    document.getElementById("typeSelect").value = "";
+    const radioButtons = document.querySelectorAll('input[name="orderType"]');
+    radioButtons.forEach(radio => radio.checked = false);
     document.getElementById("storeSelect").value = "";
-    document.getElementById("prioritySelect").value = "";
     
     const textarea = document.querySelector('.slds-textarea');
     if (textarea) {

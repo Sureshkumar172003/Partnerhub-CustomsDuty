@@ -49,15 +49,12 @@
         <div class="slds-content-lg">
             <!-- Main Button Bar -->
             <div style="margin-bottom: 16px; display:flex; gap:10px; flex-wrap: wrap;">
-                <button class="slds-btn slds-btn-brand slds-btn-sm">Send to WMS</button>
-                <button class="slds-btn slds-btn-neutral slds-btn-sm">Re-send updated</button>
                 
                 <!-- Clicking these enables editing -->
-                <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">Update file (partial)</button>
-                <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">Update file (full)</button>
+                <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">Update file</button>
                 
-                <button class="slds-btn slds-btn-neutral slds-btn-sm text-red-600" onclick="deleteSelectedLines()">Delete Transaction</button>
-                <button class="slds-btn slds-btn-neutral slds-btn-sm text-red-600" onclick="handleDeleteErrorLines()">Delete error lines</button>
+                <button class="slds-btn slds-btn-neutral slds-btn-sm slds-text-color_error" onclick="deleteSelectedLines()">Delete Transaction</button>
+
                 
                 <button class="slds-btn slds-btn-neutral slds-btn-sm ml-auto" onclick="location.href='duty-grid.html'">Back to grid</button>
             </div>
@@ -144,10 +141,7 @@ function loadAndRender() {
     detailRows.forEach(r => {
     let errorMsgs = [];
     if (!r.SKU) errorMsgs.push("SKU required");
-    if (!r.UOM) errorMsgs.push("UOM required");
     if (Number(r.Qty) === 0 || !r.Qty) errorMsgs.push("Qty cannot be zero");
-    if (!r.ShipTo) errorMsgs.push("Ship_to required");
-    if (!r.ReqDate) errorMsgs.push("Date required");
 
     if (errorMsgs.length > 0) {
         r.STATUS = "ERROR";
@@ -172,42 +166,27 @@ function loadAndRender() {
         : '<span class="slds-badge slds-badge-success">Valid</span>';
 
     const colDefs = [
-        { 
-            headerName: '', 
-            checkboxSelection: true, 
-            headerCheckboxSelection: true, // Select all checkbox
-            width: 50 
-        },
-        { headerName: 'LINE', valueGetter: "node.rowIndex + 1", width: 70 },
-        { 
-            headerName: 'SKU', 
-            field: 'SKU', 
-            flex: 1, 
-            editable: () => isEditMode, 
-            cellStyle: { fontWeight: '600', color: '#181818', fontSize: '14px' } 
-        },
-        { 
-            headerName: 'QTY', 
-            field: 'Qty', 
-            width: 100, 
-            editable: () => isEditMode,
-            cellStyle: p => ({ 
-                color: Number(p.value) === 0 ? 'red' : '#181818', 
-                fontWeight: '700', 
-                fontSize: '14px' 
-            })
-        },
-        { headerName: 'UOM', field: 'UOM', width: 90, editable: () => isEditMode },
-        { headerName: 'SHIP TO', field: 'ShipTo', width: 130, editable: () => isEditMode },
-        { headerName: 'REQ. DATE', field: 'ReqDate', width: 130, editable: () => isEditMode },
-        { 
-            headerName: 'STATUS', 
-            field: 'STATUS', 
-            width: 110,
-            cellRenderer: p => `<span class="${p.value==='ERROR'?'text-red-600':'text-green-600'} font-bold">${p.value}</span>`
-        },
-        { headerName: 'WMS MESSAGE', field: 'MESSAGE', flex: 1.5, cellStyle: {color: '#BA0517', fontStyle: 'italic', fontSize: '13px'} }
-    ];
+    { checkboxSelection: true, width: 50 },
+    { headerName: 'LINE', valueGetter: "node.rowIndex + 1", width: 70 },
+    { headerName: 'STORE CODE', field: 'StoreCode', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'STORE NAME', field: 'StoreName', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'SALE DATE', field: 'SaleDate', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'SKU', field: 'SKU', flex: 1, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'DESCRIPTION', field: 'Description', flex: 1, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'QTY', field: 'Qty', width: 100, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'UNIT PRICE', field: 'UnitPrice', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'TOTAL PRICE', field: 'TotalPrice', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'MODE', field: 'Mode', width: 100, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
+    { headerName: 'STATUS', field: 'STATUS', width: 110 },
+    { headerName: 'MESSAGE', field: 'MESSAGE', flex: 1 }
+];
+
+   function markAsUpdated(params) {
+    if (params.data.Mode !== "UPDATE") {
+        params.data.Mode = "UPDATE";
+        params.api.refreshCells({ rowNodes: [params.node], columns: ['Mode'] });
+    }
+}
 
     if (detApi) {
         detApi.setGridOption('rowData', detailRows);
@@ -258,7 +237,7 @@ function processSave() {
     
             const currentlyHasErrors = updatedGridRows.some(l => {
                 const q = Number(l.Qty);
-                return !l.SKU || !l.UOM || q === 0 || isNaN(q) || !l.ShipTo || !l.ReqDate;
+                return !l.SKU || q === 0 || isNaN(q);
             });
             
             t.status = currentlyHasErrors ? "ERROR" : "UPLOADED";
@@ -283,22 +262,6 @@ function deleteSelectedLines() {
         // Remove from Grid first
         detApi.applyTransaction({ remove: selectedRows });
         // Save current clean state of Grid to LocalStorage
-        processSave();
-    }
-}
-
-function handleDeleteErrorLines() {
-    const allNodes = [];
-    detApi.forEachNode(node => allNodes.push(node.data));
-    const errors = allNodes.filter(r => r.STATUS === "ERROR");
-
-    if (errors.length === 0) {
-        showToast("No errors found to delete.", "warning");
-        return;
-    }
-
-    if (confirm("Delete all error lines?")) {
-        detApi.applyTransaction({ remove: errors });
         processSave();
     }
 }
