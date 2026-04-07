@@ -15,20 +15,83 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        .ag-theme-alpine { --ag-header-background-color: #ffffff; --ag-font-family: 'Montserrat'; width: 100%; height: 400px; }
-        .duty-tabs { border-bottom: 1px solid var(--slds-n7); display: flex; gap: 30px; padding: 0 24px; background: white; }
-        .duty-tab-item { padding: 12px 0; font-size: 11px; font-weight: 700; color: var(--slds-n4); text-transform: uppercase; border-bottom: 3px solid transparent; cursor: pointer; text-decoration: none; }
-        .duty-tab-item.active { color: var(--slds-brand-accent); border-bottom-color: var(--slds-brand-accent); }
-        
+        /* Neutralizing slds.css gaps */
+        .slds-body, .slds-body--no-tabs { 
+            margin-left: 0 !important; width: 100% !important; max-width: 100% !important; padding-top: 0 !important; 
+        }
+        .slds-content-lg { padding: 12px 16px !important; }
+
+        /* Ag-Grid Custom Styling (Matching Transaction Grid Page) */
+        .ag-theme-alpine { 
+            --ag-header-background-color: #f8fafc; 
+            --ag-font-family: 'Montserrat'; 
+            width: 100% !important; 
+            height: 400px !important; 
+            border: 1px solid #e2e8f0;
+        }
+        .ag-theme-alpine .ag-header-cell { border-right: 1px solid #e2e8f0 !important; }
+        .ag-theme-alpine .ag-header-cell-label { 
+            font-weight: 800 !important; 
+            color: #1e293b !important;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        .ag-theme-alpine .ag-row { border-bottom: 1px solid #f1f5f9; }
+        .ag-theme-alpine .ag-cell { display: flex; align-items: center; font-size: 13px; color: #334155; }
+
+        /* Minimizable Card Styling */
+        .summary-header {
+            display: flex; color: #ea580c; align-items: center; justify-content: space-between;
+            padding: 10px 16px; background: #fff; cursor: pointer;
+            border: 1px solid #DDDBDA; border-bottom: none; border-radius: 4px 4px 0 0;
+            user-select: none;
+        }
+        .summary-header span {
+    color: #ea580c !important;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    position: relative;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+.summary-header:hover .rotate-icon {
+    color: #ea580c;
+    transform: scale(1.1);
+}
+        #metaCardBody { transition: max-height 0.3s ease-out; overflow: hidden; background: #fff; border: 1px solid #DDDBDA; }
+        #metaCardBody.collapsed { max-height: 0 !important; padding: 0 !important; border: none !important; }
+        .rotate-icon {
+    color: #f97316 !important;
+    font-size: 14px;
+    transition: transform 0.3s, color 0.2s;
+}
+.summary-header:hover .rotate-icon {
+    color: #ea580c !important;
+    transform: scale(1.1);
+}
+        .collapsed-icon {
+    transform: rotate(-90deg);
+    color: #f97316 !important;
+}
+
+        /* Bottom Action Bar */
+        .bottom-action-bar {
+            display: flex; align-items: center; gap: 10px; padding: 12px 16px; 
+            background: #fff; border: 1px solid #DDDBDA; border-top: none;
+            border-radius: 0 0 4px 4px; margin-bottom: 20px;
+        }
+
         .hidden { display: none; }
         .edit-mode-active { border: 2px solid var(--slds-brand-accent) !important; }
+
+        body.in-iframe { padding: 0 !important; margin: 0 !important; background: #f8fafc; }
+        body.in-iframe #slds-global-header-container, 
+        body.in-iframe #slds-app-nav-container, 
+        body.in-iframe #slds-workspace-tabs-container { display: none !important; }
     </style>
 </head>
 <body>
-    <div id="slds-global-header-container"></div>
-    <div id="slds-app-nav-container"></div>
-    <div id="slds-workspace-tabs-container"></div>
-
     <div class="slds-body">
         <!-- Header -->
         <div class="slds-list-header">
@@ -36,241 +99,206 @@
                 <div class="slds-icon-std ic-report" style="background:var(--slds-brand);">
                     <svg fill="none" stroke="white" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
-                <div><div class="slds-list-title">Customs Duty Control</div><div class="slds-list-subtitle">DETAIL VIEW</div></div>
+                <div>
+                    <div class="slds-list-title">Customs Duty Control</div>
+                    <div class="slds-list-subtitle">DETAIL VIEW</div>
+                </div>
             </div>
-        </div>
-
-        <div class="duty-tabs">
-            <a href="duty-upload.html" class="duty-tab-item">Upload</a>
-            <a href="duty-grid.html" class="duty-tab-item">Transaction grid</a>
-            <a href="duty-detail.html" class="duty-tab-item active">Detail view</a>
         </div>
 
         <div class="slds-content-lg">
-            <!-- Main Button Bar -->
-            <div style="margin-bottom: 16px; display:flex; gap:10px; flex-wrap: wrap;">
-                
-                <!-- Clicking these enables editing -->
-                <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">Update file</button>
-                
-                <button class="slds-btn slds-btn-neutral slds-btn-sm slds-text-color_error" onclick="deleteSelectedLines()">Delete Transaction</button>
-
-                
-                <button class="slds-btn slds-btn-neutral slds-btn-sm ml-auto" onclick="location.href='duty-grid.html'">Back to grid</button>
-            </div>
-
-            <!-- Meta Information Card -->
-            <div class="slds-card" style="margin-bottom: 16px; padding:20px; font-size: 12px; color: #444;">
-    <div class="grid grid-cols-3 gap-x-12 gap-y-4">
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Ref #</p>
-            <p id="refNo" class="font-bold text-blue-600 underline"></p>
-        </div>
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Upload name</p>
-            <p id="uploadNameDisplay" class="font-bold"></p>
-        </div>
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Type</p>
-            <span id="typeBadge" class="slds-badge slds-badge-info"></span>
-        </div>
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Store</p>
-            <p id="storeDisplay" class="font-bold"></p>
-        </div>
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Status</p>
-            <div id="statusBox"></div>
-        </div>
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Lines</p>
-            <p id="lineInfo" class="font-bold"></p>
-        </div>
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Uploaded</p>
-            <p id="uploadedAtDisplay" class="font-bold text-slate-500"></p>
-        </div>
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Last update</p>
-            <p id="lastUpdateDisplay" class="font-bold text-slate-500"></p>
-        </div>
-        <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Priority</p>
-            <p id="priorityDisplay" class="font-bold"></p>
-        </div>
-    </div>
+            
+            <!-- Minimizable Transaction Summary -->
+            <div class="summary-header" onclick="toggleMetaCard()">
+    <span>Transaction Summary</span>
+    <i id="foldArrow" class="fa-solid fa-chevron-down rotate-icon"></i>
 </div>
+            <div id="metaCardBody" style="padding:20px; font-size: 12px; color: #444;">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-4">
+                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Ref #</p><p id="refNo" class="font-bold text-blue-600 underline"></p></div>
+                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Upload name</p><p id="uploadNameDisplay" class="font-bold"></p></div>
+                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Type</p><span id="typeBadge" class="slds-badge slds-badge-info"></span></div>
+                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Status</p><div id="statusBox"></div></div>
+                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Store</p><p id="storeDisplay" class="font-bold"></p></div>
+                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Lines</p><p id="lineInfo" class="font-bold"></p></div>
+                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Uploaded</p><p id="uploadedAtDisplay" class="font-bold text-slate-500"></p></div>
+                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Last update</p><p id="lastUpdateDisplay" class="font-bold text-slate-500"></p></div>
+                </div>
+            </div>
 
             <!-- The Grid -->
             <div id="detailAg" class="ag-theme-alpine"></div>
 
-            <!-- SAVE BUTTON: Only visible when editing -->
-            <div id="saveContainer" class="hidden" style="margin-top: 20px; justify-content: flex-end;">
-                <button class="slds-btn slds-btn-neutral px-8 h-10 shadow-sm" onclick="cancelUpdate()">Cancel</button>
-                <button class="slds-btn slds-btn-brand px-12 h-10 shadow-lg" onclick="processSave()">Save Changes</button>
+            <!-- Bottom Action Bar -->
+            <div class="bottom-action-bar">
+                <button class="slds-btn slds-btn-neutral slds-btn-sm" onclick="enableEditMode()">
+                    <i class="fa-solid fa-pen-to-square mr-1"></i> Update file
+                </button>
+                <button class="slds-btn slds-btn-neutral slds-btn-sm slds-text-color_error" onclick="deleteSelectedLines()">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Delete Transaction
+                </button>
+
+                <!-- SAVE BUTTONS: Only visible when editing -->
+                <div id="saveContainer" class="hidden ml-auto flex gap-2">
+                    <button class="slds-btn slds-btn-neutral slds-btn-sm px-6" onclick="cancelUpdate()">Cancel</button>
+                    <button class="slds-btn slds-btn-brand slds-btn-sm px-8" onclick="processSave()">Save Changes</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="js/app.js"></script>
     <script>
-let detApi;
-let isEditMode = false;
-const selected = JSON.parse(localStorage.getItem("selectedRow"));
+        let detApi;
+        let isEditMode = false;
+        const selected = JSON.parse(localStorage.getItem("selectedRow"));
+        const inIframe = (window.self !== window.top);
 
-window.onload = () => {
-    initPage('duty-detail', 'Detail View');
-    
-    if (!selected) { 
-        window.location.href = "duty-grid.html"; 
-        return; 
-    }
+        if (inIframe) document.body.classList.add('in-iframe');
 
-    if (localStorage.getItem("save_success_flag") === "true") {
-        showToast("Transaction updated and saved successfully", "success");
-        localStorage.removeItem("save_success_flag");
-    }
+        window.onload = () => {
+            if (!selected) { 
+                if(!inIframe) window.location.href = "duty-grid.html"; 
+                return; 
+            }
+            if (localStorage.getItem("save_success_flag") === "true") {
+                showToast("Changes saved successfully", "success");
+                localStorage.removeItem("save_success_flag");
+            }
+            loadAndRender();
+        };
 
-    loadAndRender();
-};
-
-function loadAndRender() {
-    const allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
-    const detailRows = allLines.filter(r => String(r.REF).trim() === String(selected.REF).trim());
-
-    detailRows.forEach(r => {
-    let errorMsgs = [];
-    if (!r.SKU) errorMsgs.push("SKU required");
-    if (Number(r.Qty) === 0 || !r.Qty) errorMsgs.push("Qty cannot be zero");
-
-    if (errorMsgs.length > 0) {
-        r.STATUS = "ERROR";
-        r.MESSAGE = errorMsgs.join(", ");
-    } else {
-        r.STATUS = "VALID";
-        r.MESSAGE = "";
-    }
-});
-
-    const errorCount = detailRows.filter(r => r.STATUS === "ERROR").length;
-    document.getElementById("refNo").innerText = selected.REF;
-    document.getElementById("uploadNameDisplay").innerText = selected.uploadName || "N/A";
-    document.getElementById("typeBadge").innerText = (selected.type || "Sales").toUpperCase();
-    document.getElementById("storeDisplay").innerText = selected.store || "N/A";
-    document.getElementById("priorityDisplay").innerText = selected.priority || "Normal";
-    document.getElementById("uploadedAtDisplay").innerText = selected.uploadedAt ? selected.uploadedAt.split('T')[0] : "";
-    document.getElementById("lineInfo").innerText = `${detailRows.length} (${errorCount} errors)`;
-    document.getElementById("lastUpdateDisplay").innerText = selected.lastUpdate || "Not updated yet";
-    document.getElementById("statusBox").innerHTML = errorCount > 0 
-        ? '<span class="slds-badge slds-badge-error">Validation error</span>' 
-        : '<span class="slds-badge slds-badge-success">Valid</span>';
-
-    const colDefs = [
-    { checkboxSelection: true, width: 50 },
-    { headerName: 'LINE', valueGetter: "node.rowIndex + 1", width: 70 },
-    { headerName: 'STORE CODE', field: 'StoreCode', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'STORE NAME', field: 'StoreName', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'SALE DATE', field: 'SaleDate', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'SKU', field: 'SKU', flex: 1, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'DESCRIPTION', field: 'Description', flex: 1, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'QTY', field: 'Qty', width: 100, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'UNIT PRICE', field: 'UnitPrice', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'TOTAL PRICE', field: 'TotalPrice', width: 120, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'MODE', field: 'Mode', width: 100, editable: () => isEditMode, onCellValueChanged: markAsUpdated },
-    { headerName: 'STATUS', field: 'STATUS', width: 110 },
-    { headerName: 'MESSAGE', field: 'MESSAGE', flex: 1 }
-];
-
-   function markAsUpdated(params) {
-    if (params.data.Mode !== "UPDATE") {
-        params.data.Mode = "UPDATE";
-        params.api.refreshCells({ rowNodes: [params.node], columns: ['Mode'] });
-    }
-}
-
-    if (detApi) {
-        detApi.setGridOption('rowData', detailRows);
-    } else {
-        detApi = agGrid.createGrid(document.querySelector('#detailAg'), {
-            columnDefs: colDefs,
-            rowData: detailRows,
-            rowSelection: 'multiple',
-            getRowStyle: p => (p.data.STATUS === "ERROR") ? { background: '#FEDAD0' } : null
-        });
-    }
-    setTimeout(() => detApi.sizeColumnsToFit(), 100);
-}
-
-function enableEditMode() {
-    isEditMode = true;
-    document.getElementById('saveContainer').classList.remove('hidden');
-    document.getElementById('detailAg').style.border = "2px solid var(--slds-brand-accent)";
-    detApi.refreshCells(); 
-    showToast("Update Mode Active", "info");
-}
-
-function cancelUpdate() {
-    window.location.reload();
-}
-
-function processSave() {
-    detApi.stopEditing();
-
-    let allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
-    let updatedGridRows = [];
-    
-    detApi.forEachNode(node => {
-        let row = node.data;
-        row.REF = selected.REF; 
-        updatedGridRows.push(row);
-    });
-
-    const otherData = allLines.filter(l => String(l.REF).trim() !== String(selected.REF).trim());
-    localStorage.setItem("uploadedData", JSON.stringify([...otherData, ...updatedGridRows]));
-
-    const timestamp = new Date().toLocaleString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-    
-    let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-    transactions.forEach(t => {
-        if (String(t.REF).trim() === String(selected.REF).trim()) {
-            t.lines = updatedGridRows.length;
-    
-            const currentlyHasErrors = updatedGridRows.some(l => {
-                const q = Number(l.Qty);
-                return !l.SKU || q === 0 || isNaN(q);
-            });
-            
-            t.status = currentlyHasErrors ? "ERROR" : "UPLOADED";
-            t.lastUpdate = timestamp; 
+        function toggleMetaCard() {
+            const body = document.getElementById('metaCardBody');
+            const arrow = document.getElementById('foldArrow');
+            body.classList.toggle('collapsed');
+            arrow.classList.toggle('collapsed-icon');
+            setTimeout(() => detApi.sizeColumnsToFit(), 300);
         }
-    });
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-    selected.lastUpdate = timestamp;
-    localStorage.setItem("selectedRow", JSON.stringify(selected));
-    localStorage.setItem("save_success_flag", "true");
-    window.location.reload();
-}
 
-function deleteSelectedLines() {
-    const selectedRows = detApi.getSelectedRows();
-    if (selectedRows.length === 0) {
-        showToast("Please select lines to delete", "warning");
-        return;
-    }
+        function loadAndRender() {
+            const allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
+            const detailRows = allLines.filter(r => String(r.REF).trim() === String(selected.REF).trim());
 
-    if (confirm(`Delete ${selectedRows.length} selected lines?`)) {
-        // Remove from Grid first
-        detApi.applyTransaction({ remove: selectedRows });
-        // Save current clean state of Grid to LocalStorage
-        processSave();
-    }
-}
+            // MESSAGE LOGIC: Populate status and message based on data validity
+            detailRows.forEach(r => {
+                let errors = [];
+                if (!r.SKU) errors.push("SKU required");
+                if (!r.Qty || Number(r.Qty) === 0) errors.push("Qty cannot be zero");
+                
+                r.STATUS = errors.length > 0 ? "ERROR" : "VALID";
+                r.MESSAGE = errors.length > 0 ? errors.join(", ") : "";
+            });
 
-// Redirect back to grid properly
-function backToGrid() {
-    window.location.href = "duty-grid.html";
-}
-</script>
-</script>
+            const errorCount = detailRows.filter(r => r.STATUS === "ERROR").length;
+
+            // Summary Info
+            document.getElementById("refNo").innerText = selected.REF;
+            document.getElementById("uploadNameDisplay").innerText = selected.uploadName || "N/A";
+            document.getElementById("typeBadge").innerText = (selected.type || "Sales").toUpperCase();
+            document.getElementById("storeDisplay").innerText = selected.store || "N/A";
+            document.getElementById("uploadedAtDisplay").innerText = selected.uploadedAt ? selected.uploadedAt.split('T')[0] : "";
+            document.getElementById("lineInfo").innerHTML = `${detailRows.length} (<span style="color: #BA0517; font-weight: 700;">${errorCount} error${errorCount !== 1 ? 's' : ''}</span>)`;
+            document.getElementById("lastUpdateDisplay").innerText = selected.lastUpdate || "Not updated yet";
+            document.getElementById("statusBox").innerHTML = errorCount > 0 
+                ? '<span class="slds-badge slds-badge-error">Validation Error</span>' 
+                : '<span class="slds-badge slds-badge-success">Valid</span>';
+
+            const colDefs = [
+                { checkboxSelection: true, width: 45, headerCheckboxSelection: true },
+                { headerName: 'LINE', valueGetter: "node.rowIndex + 1", width: 80 },
+                { headerName: 'STORE CODE', field: 'StoreCode', width: 140, editable: () => isEditMode },
+                { headerName: 'STORE NAME', field: 'StoreName', width: 140, editable: () => isEditMode },
+                { headerName: 'SALE DATE', field: 'SaleDate', width: 120, editable: () => isEditMode },
+                { headerName: 'SKU', field: 'SKU', width: 110, editable: () => isEditMode },
+                { headerName: 'DESCRIPTION', field: 'Description', width: 150, editable: () => isEditMode },
+                { headerName: 'QTY', field: 'Qty', width: 80, editable: () => isEditMode },
+                { headerName: 'UNIT PRICE', field: 'UnitPrice', width: 130, editable: () => isEditMode },
+                { headerName: 'TOTAL PRICE', field: 'TotalPrice', width: 140 },
+                { headerName: 'STATUS', field: 'STATUS', width: 100, cellRenderer: p => {
+                    const color = p.value === 'ERROR' ? '#BA0517' : '#0176D3';
+                    const bg = p.value === 'ERROR' ? '#FFE9E9' : '#E3F3FF';
+                    return `<span style="background:${bg}; color:${color}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;">${p.value}</span>`;
+                }},
+                { headerName: 'MESSAGE', field: 'MESSAGE', flex: 1.2 }
+            ];
+
+            const gridOptions = {
+                columnDefs: colDefs,
+                rowData: detailRows,
+                rowSelection: 'multiple',
+                defaultColDef: { resizable: true, sortable: true },
+                getRowStyle: p => (p.data.STATUS === "ERROR") ? { background: '#FEDAD0' } : null,
+                onGridReady: (params) => {
+                    detApi = params.api;
+                    params.api.sizeColumnsToFit();
+                }
+            };
+
+            detApi = agGrid.createGrid(document.querySelector('#detailAg'), gridOptions);
+        }
+
+        function enableEditMode() {
+            isEditMode = true;
+            document.getElementById('saveContainer').classList.remove('hidden');
+            document.getElementById('detailAg').style.border = "2px solid var(--slds-brand-accent)";
+            detApi.refreshCells(); 
+            showToast("Edit Mode Enabled", "info");
+        }
+
+        function cancelUpdate() { window.location.reload(); }
+
+        function processSave() {
+            detApi.stopEditing();
+
+            // 1. Collect data from current Grid
+            let updatedGridRows = [];
+            detApi.forEachNode(node => {
+                let row = node.data;
+                row.REF = selected.REF; // Ensure reference stays consistent
+                updatedGridRows.push(row);
+            });
+
+            // 2. Update 'uploadedData' (Individual line items)
+            let allLines = JSON.parse(localStorage.getItem("uploadedData")) || [];
+            const otherData = allLines.filter(l => String(l.REF).trim() !== String(selected.REF).trim());
+            localStorage.setItem("uploadedData", JSON.stringify([...otherData, ...updatedGridRows]));
+
+            // 3. Update 'transactions' (The master grid view)
+            const timestamp = new Date().toLocaleString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+            let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+            
+            transactions.forEach(t => {
+                if (String(t.REF).trim() === String(selected.REF).trim()) {
+                    t.lines = updatedGridRows.length;
+                    const hasErrors = updatedGridRows.some(l => !l.SKU || !l.Qty || Number(l.Qty) === 0);
+                    t.status = hasErrors ? "ERROR" : "UPLOADED";
+                    t.lastUpdate = timestamp; 
+                }
+            });
+
+            localStorage.setItem("transactions", JSON.stringify(transactions));
+            
+            // 4. Update the 'selectedRow' so header info stays fresh on reload
+            selected.lastUpdate = timestamp;
+            localStorage.setItem("selectedRow", JSON.stringify(selected));
+            
+            localStorage.setItem("save_success_flag", "true");
+            window.location.reload();
+        }
+
+        function deleteSelectedLines() {
+            const selectedRows = detApi.getSelectedRows();
+            if (selectedRows.length === 0) return showToast("Select rows to delete", "warning");
+            
+            if (confirm(`Delete ${selectedRows.length} selected lines?`)) {
+                // Remove from Grid View
+                detApi.applyTransaction({ remove: selectedRows });
+                // Trigger Save logic to sync with LocalStorage
+                processSave();
+            }
+        }
+
+    </script>
 </body>
 </html>

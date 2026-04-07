@@ -74,7 +74,6 @@ const PH_NAV = [
     { id: 'adhoc-return', label: 'Ad-hoc Return', href: 'adhoc-return-list.html', icon: 'refresh', group: 'Orders & ASN' },
     { id: 'duty-upload', label: 'New Upload', href: 'duty-upload.html', icon: 'product', group: 'Customs Duty' },
     { id: 'duty-grid', label: 'Transaction Grid', href: 'duty-grid.html', icon: 'order', group: 'Customs Duty' },
-    { id: 'duty-detail', label: 'Detail View', href: 'duty-detail.html', icon: 'info', group: 'Customs Duty' },
 ];
 
 const PH_NAV_GROUPS = [

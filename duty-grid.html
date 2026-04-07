@@ -7,39 +7,83 @@
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .ag-theme-alpine { --ag-header-background-color: #f8fafc; --ag-font-family: 'Montserrat'; width: 100%; height: 450px; }
         .duty-tabs { border-bottom: 1px solid var(--slds-n7); display: flex; gap: 30px; padding: 0 24px; background: white; }
         .duty-tab-item { padding: 12px 0; font-size: 11px; font-weight: 700; color: var(--slds-n4); text-transform: uppercase; border-bottom: 3px solid transparent; cursor: pointer; text-decoration: none; }
         .duty-tab-item.active { color: var(--slds-brand-accent); border-bottom-color: var(--slds-brand-accent); }
-        .ag-theme-alpine .ag-row {
-    border-bottom: 1px solid #e5e7eb;
-}
+        .ag-theme-alpine .ag-row { border-bottom: 1px solid #e5e7eb; }
+        .ag-theme-alpine .ag-row:hover { background: #f9fafb; }
+        .ag-theme-alpine .ag-row-selected { background: #EAF3FF !important; }
+        .ag-theme-alpine .ag-cell { border: none !important; font-size: 14px; display: flex; align-items: center; }
+        .ag-theme-alpine .ag-header { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+        .ag-theme-alpine .ag-selection-checkbox { display: flex; align-items: center; justify-content: center; }
 
-.ag-theme-alpine .ag-row:hover {
-    background: #f9fafb;
+        /* Modal Styles */
+        .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 9999;
+    display: none; align-items: center; justify-content: center;
 }
-
-.ag-theme-alpine .ag-row-selected {
-    background: #EAF3FF !important;
+        .modal-content {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.2s ease;
 }
-
-.ag-theme-alpine .ag-cell {
-    border: none !important;
+.modal-buttons {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    z-index: 10;
+    display: flex;
+    gap: 10px;
+}
+.modal-btn {
+    background: white;
+    border: 1px solid #f97316;
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
     font-size: 14px;
-    display: flex;
-    align-items: center;
-}
-
-.ag-theme-alpine .ag-header {
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.ag-theme-alpine .ag-selection-checkbox {
-    display: flex;
+    font-weight: 600;
+    color: #1e293b;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s ease;
+}
+.modal-btn:hover {
+    background: #fff7ed;
+    border-color: #ea580c;
+}
+
+        .modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: white;
+    border: 1px solid #f97316;  
+    border-radius: 4px;
+    padding: 6px 14px;           
+    cursor: pointer;
+    z-index: 10;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background: #fff7ed;       
+    border-color: #ea580c;      
 }
     </style>
 </head>
@@ -56,278 +100,201 @@
         <div class="duty-tabs">
             <a href="duty-upload.html" class="duty-tab-item">Upload</a>
             <a href="duty-grid.html" class="duty-tab-item active">Transaction grid</a>
-            <a href="duty-detail.html" class="duty-tab-item">Detail view</a>
         </div>
         <div class="slds-filter-bar" style="padding:16px 24px;">
-
             <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;">
-
                 <div>
                     <label class="slds-form-label">Status</label>
-                        <select id="statusFilter" class="slds-select">
+                    <select id="statusFilter" class="slds-select">
                         <option value="">All statuses</option>
                         <option value="UPLOADED">UPLOADED</option>
                         <option value="ERROR">ERROR</option>
-                        </select>
+                    </select>
                 </div>
-
                 <div>
                     <label class="slds-form-label">Type</label>
-                        <select id="typeFilter" class="slds-select">
+                    <select id="typeFilter" class="slds-select">
                         <option value="">All</option>
                         <option value="Sales order">Sales order</option>
                         <option value="Return order">Return order</option>
-                        </select>
+                    </select>
                 </div>
-
                 <div>
                     <label class="slds-form-label">Store</label>
-            <select id="storeFilter" class="slds-select">
-                <option value="">All stores</option>
-                <option value="STR-001">STR-001</option>
-                <option value="STR-002">STR-002</option>
-                <option value="STR-003">STR-003</option>
-                <option value="STR-004">STR-004</option>
-            </select>
-        </div>
-
-        <div>
-            <label class="slds-form-label">From Date</label>
-            <input id="fromDate" type="date" class="slds-input">
-        </div>
-
-        <div>
-            <label class="slds-form-label">To Date</label>
-            <input id="toDate" type="date" class="slds-input">
-        </div>
-
-        <div style="display:flex; gap:10px;">
-            <button id="searchBtn" class="slds-btn slds-btn-brand">Search</button>
-            <button id="resetBtn" class="slds-btn slds-btn-neutral">Reset</button>
-        </div>
-
-        </div>
-
+                    <select id="storeFilter" class="slds-select">
+                        <option value="">All stores</option>
+                        <option value="STR-001">STR-001</option>
+                        <option value="STR-002">STR-002</option>
+                        <option value="STR-003">STR-003</option>
+                        <option value="STR-004">STR-004</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="slds-form-label">From Date</label>
+                    <input id="fromDate" type="date" class="slds-input">
+                </div>
+                <div>
+                    <label class="slds-form-label">To Date</label>
+                    <input id="toDate" type="date" class="slds-input">
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button id="searchBtn" class="slds-btn slds-btn-brand">Search</button>
+                    <button id="resetBtn" class="slds-btn slds-btn-neutral">Reset</button>
+                </div>
+            </div>
         </div>
         <div class="slds-card" style="margin:16px 24px;">
             <div id="mainAg" class="ag-theme-alpine"></div>
             <div style="padding:10px 24px; border-top:1px solid var(--slds-n7); background:var(--slds-n10); display:flex; gap:10px;">
-                <button class="slds-btn slds-btn-brand slds-btn-sm">Send to WMS</button>
                 <button id="deleteBtn" class="slds-btn slds-btn-neutral slds-btn-sm slds-text-color_error">Delete selected</button>
                 <button id="exportBtn" class="slds-btn slds-btn-neutral slds-btn-sm ml-auto">Export CSV</button>
             </div>
         </div>
     </div>
+
+    <!-- Modal Container -->
+    <div id="detailModal" class="modal-overlay">
+    <div class="modal-content" id="modalContent">
+        <div class="modal-buttons">
+            <button class="modal-btn" id="closeModalBtn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <iframe id="detailFrame" src="" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+</div>
+
     <script src="js/app.js"></script>
     <script>
-window.onload = () => {
-    initPage('duty-grid', 'Transaction Grid');
+        // Modal logic
+        function closeModal() {
+    const modal = document.getElementById('detailModal');
+    const frame = document.getElementById('detailFrame');
 
-    const storedData = JSON.parse(localStorage.getItem("transactions")) || [];
-
-    const columnDefs = [
-    {
-    headerName: '',
-    checkboxSelection: true,
-    headerCheckboxSelection: true,
-    headerCheckboxSelectionFilteredOnly: true,
-    width: 50,
-    pinned: 'left',
-    suppressSizeToFit: true
-},
-
-    {
-    headerName: 'REF #',
-    field: 'REF',
-    width: 190,
-    cellRenderer: params => {
-        return `<span style="color:#0176D3; font-weight:600; cursor:pointer;">
-            ${params.value}
-        </span>`;
-    }
-},
-    { headerName: 'UPLOAD NAME', field: 'uploadName', flex: 2, minWidth: 150 },
-    {
-  headerName: 'TYPE',
-  field: 'type',
-  flex: 1,
-  width:170,
-  cellRenderer: p => `
-    <span style="
-        background:#E0F2FE;
-        color:#0369A1;
-        padding:4px 8px;
-        border-radius:6px;
-        font-size:11px;
-        font-weight:600;
-    ">${p.value.toUpperCase()}</span>
-  `
-},
-    { headerName: 'STORE', field: 'store', flex: 1, width:120, },
-    {
-    headerName: 'LINES',
-    field: 'lines',
-    width: 100,
-    cellStyle: { textAlign: 'center', fontWeight: '600' }
-},
-    {
-    headerName: 'STATUS',
-    field: 'status',
-    width: 140,
-    cellRenderer: params => {
-        const val = params.value;
-
-        if (val === "UPLOADED") {
-            return `<span style="
-                background:#E3F3FF;
-                color:#0176D3;
-                padding:4px 8px;
-                border-radius:6px;
-                font-size:11px;
-                font-weight:600;
-            ">UPLOADED</span>`;
-        }
-
-        if (val === "ERROR") {
-            return `<span style="
-                background:#FFE9E9;
-                color:#BA0517;
-                padding:4px 8px;
-                border-radius:6px;
-                font-size:11px;
-                font-weight:600;
-            ">ERROR</span>`;
-        }
-
-        return val;
-    }
-},
-    { headerName: 'UPLOADED', field: 'uploadedAt', flex: 1, valueFormatter: params => params.value ? params.value.split('T')[0] : "" },
-    {
-    headerName: 'LAST',
-    width: 130,
-    valueGetter: p => {
-        if (!p.data.uploadedAt) return "";
-        const d = new Date(p.data.uploadedAt);
-        return d.toLocaleTimeString([], { hour12: true }); 
-    }
-}
-];
-
-    const gridApi = agGrid.createGrid(document.querySelector('#mainAg'), {
-        columnDefs: columnDefs,
-        rowData: storedData,
-        rowSelection: 'multiple',
-        suppressRowClickSelection: false,
-        onRowClicked: function(event) {
-    const isCheckbox = event.event.target.closest('.ag-selection-checkbox, input[type="checkbox"]');
-    if (isCheckbox) return;
-
-    const selectedRow = event.data;
-    localStorage.setItem("selectedRow", JSON.stringify(selectedRow));
-    window.location.href = "duty-detail.html";
-}
-    });
-
-    document.getElementById("searchBtn").onclick = () => {
-    const status = document.getElementById("statusFilter").value;
-    const type = document.getElementById("typeFilter").value;
-    const store = document.getElementById("storeFilter").value;
-    const fromDate = document.getElementById("fromDate").value;
-    const toDate = document.getElementById("toDate").value;
+    modal.style.display = 'none';
+    frame.src = '';
 
     const originalData = JSON.parse(localStorage.getItem("transactions")) || [];
+    if (window.gridApi) window.gridApi.setGridOption('rowData', originalData);
+}
 
-    // Normalize date limits to timestamps
-    // Set 'from' to 00:00:00 (start of day)
-    const fromLimit = fromDate ? new Date(fromDate).setHours(0, 0, 0, 0) : null;
-    // Set 'to' to 23:59:59 (end of day)
-    const toLimit = toDate ? new Date(toDate).setHours(23, 59, 59, 999) : null;
+    // Get elements
+    const modalOverlay = document.getElementById('detailModal');
+    const modalContent = document.getElementById('modalContent');
+    const closeBtn = document.getElementById('closeModalBtn');
 
-    const filtered = originalData.filter(r => {
-        // Convert the stored ISO string into a numeric timestamp
-        const rowTime = new Date(r.uploadedAt).getTime();
+    // Close: fully close modal and reset
+    closeBtn.addEventListener('click', closeModal);
 
-        const statusMatch = !status || r.status === status;
-        const typeMatch = !type || r.type === type;
-        const storeMatch = !store || r.store === store;
+        window.onload = () => {
+            initPage('duty-grid', 'Transaction Grid');
 
-        // Numeric date check
-        let dateMatch = true;
-        if (fromLimit && rowTime < fromLimit) dateMatch = false;
-        if (toLimit && rowTime > toLimit) dateMatch = false;
+            const storedData = JSON.parse(localStorage.getItem("transactions")) || [];
 
-        return statusMatch && typeMatch && storeMatch && dateMatch;
-    });
+            // Changed hard widths to flex to fix grey whitespace!
+            const columnDefs = [
+                { headerName: '', checkboxSelection: true, headerCheckboxSelection: true, width: 50, pinned: 'left' },
+                { headerName: 'REF #', field: 'REF', flex: 1.5, minWidth: 150, cellRenderer: params => `<span style="color:#0176D3; font-weight:600; cursor:pointer;">${params.value}</span>` },
+                { headerName: 'UPLOAD NAME', field: 'uploadName', flex: 2, minWidth: 150 },
+                { headerName: 'TYPE', field: 'type', flex: 1, minWidth: 120, cellRenderer: p => `<span style="background:#E0F2FE; color:#0369A1; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:600;">${p.value.toUpperCase()}</span>` },
+                { headerName: 'STORE', field: 'store', flex: 1, minWidth: 85 },
+                { headerName: 'LINES', field: 'lines', width: 75, cellStyle: { textAlign: 'center', fontWeight: '600' } },
+                { headerName: 'STATUS', field: 'status', flex: 1, minWidth: 120, cellRenderer: params => {
+                    const val = params.value;
+                    if (val === "UPLOADED") return `<span style="background:#E3F3FF; color:#0176D3; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:600;">UPLOADED</span>`;
+                    if (val === "ERROR") return `<span style="background:#FFE9E9; color:#BA0517; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:600;">ERROR</span>`;
+                    return val;
+                }},
+                { headerName: 'UPLOADED', field: 'uploadedAt', flex: 1, minWidth: 110, valueFormatter: params => params.value ? params.value.split('T')[0] : "" },
+                { headerName: 'LAST', flex: 1, minWidth: 100, valueGetter: p => {
+                    if (!p.data.uploadedAt) return "";
+                    return new Date(p.data.uploadedAt).toLocaleTimeString([], { hour12: true }); 
+                }}
+            ];
 
-    gridApi.setGridOption('rowData', filtered);
-};
+            window.gridApi = agGrid.createGrid(document.querySelector('#mainAg'), {
+                columnDefs: columnDefs,
+                rowData: storedData,
+                rowSelection: 'multiple',
+                suppressRowClickSelection: false,
+                onRowClicked: function(event) {
+                    const isCheckbox = event.event.target.closest('.ag-selection-checkbox, input[type="checkbox"]');
+                    if (isCheckbox) return;
 
-document.getElementById("resetBtn").onclick = () => {
+                    const selectedRow = event.data;
+                    localStorage.setItem("selectedRow", JSON.stringify(selectedRow));
+                    
+                    // OPEN MODAL INSTEAD OF CHANGING PAGE
+                    document.getElementById('detailFrame').src = 'duty-detail.html';
+                    document.getElementById('detailModal').style.display = 'flex';
+                }
+            });
 
-    document.querySelectorAll("select, input").forEach(el => el.value = "");
+            document.getElementById("searchBtn").onclick = () => {
+                const status = document.getElementById("statusFilter").value;
+                const type = document.getElementById("typeFilter").value;
+                const store = document.getElementById("storeFilter").value;
+                const fromDate = document.getElementById("fromDate").value;
+                const toDate = document.getElementById("toDate").value;
 
-    const originalData = JSON.parse(localStorage.getItem("transactions")) || [];
-    gridApi.setGridOption('rowData', originalData);
-};
+                const originalData = JSON.parse(localStorage.getItem("transactions")) || [];
+                const fromLimit = fromDate ? new Date(fromDate).setHours(0, 0, 0, 0) : null;
+                const toLimit = toDate ? new Date(toDate).setHours(23, 59, 59, 999) : null;
 
-    document.getElementById("deleteBtn").onclick = () => {
-    const selectedRows = gridApi.getSelectedRows();
+                const filtered = originalData.filter(r => {
+                    const rowTime = new Date(r.uploadedAt).getTime();
+                    const statusMatch = !status || r.status === status;
+                    const typeMatch = !type || r.type === type;
+                    const storeMatch = !store || r.store === store;
+                    let dateMatch = true;
+                    if (fromLimit && rowTime < fromLimit) dateMatch = false;
+                    if (toLimit && rowTime > toLimit) dateMatch = false;
+                    return statusMatch && typeMatch && storeMatch && dateMatch;
+                });
+                window.gridApi.setGridOption('rowData', filtered);
+            };
 
-    if (selectedRows.length === 0) {
-        alert("Select at least one row");
-        return;
-    }
+            document.getElementById("resetBtn").onclick = () => {
+                document.querySelectorAll("select, input").forEach(el => el.value = "");
+                const originalData = JSON.parse(localStorage.getItem("transactions")) || [];
+                window.gridApi.setGridOption('rowData', originalData);
+            };
 
-    if (!confirm("Are you sure you want to delete selected records?")) return;
+            document.getElementById("deleteBtn").onclick = () => {
+                const selectedRows = window.gridApi.getSelectedRows();
+                if (selectedRows.length === 0) { alert("Select at least one row"); return; }
+                if (!confirm("Are you sure you want to delete selected records?")) return;
 
-    const selectedRefs = selectedRows.map(r => r.REF);
+                const selectedRefs = selectedRows.map(r => r.REF);
+                let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+                transactions = transactions.filter(t => !selectedRefs.includes(t.REF));
 
-    let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-    transactions = transactions.filter(t => !selectedRefs.includes(t.REF));
+                let allRows = JSON.parse(localStorage.getItem("uploadedData")) || [];
+                allRows = allRows.filter(r => !selectedRefs.includes(r.REF));
 
-    let allRows = JSON.parse(localStorage.getItem("uploadedData")) || [];
-    allRows = allRows.filter(r => !selectedRefs.includes(r.REF));
+                localStorage.setItem("transactions", JSON.stringify(transactions));
+                localStorage.setItem("uploadedData", JSON.stringify(allRows));
 
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-    localStorage.setItem("uploadedData", JSON.stringify(allRows));
+                window.gridApi.setGridOption('rowData', transactions);
+                window.gridApi.deselectAll();
+            };
 
-    gridApi.setGridOption('rowData', transactions);
-    gridApi.refreshCells();
-    gridApi.deselectAll();
-};
+            document.getElementById("exportBtn").onclick = () => {
+                const selectedRows = window.gridApi.getSelectedRows();
+                if (selectedRows.length === 0) { alert("Select rows to export"); return; }
 
-
-document.getElementById("exportBtn").onclick = () => {
-    const selectedRows = gridApi.getSelectedRows();
-
-    if (selectedRows.length === 0) {
-        alert("Select rows to export");
-        return;
-    }
-
-    const headers = ["REF", "uploadName", "type", "store", "lines", "status", "uploadedAt"];
-    const csv = [
-        headers.join(","), 
-        ...selectedRows.map(row =>
-            headers.map(h => `"${row[h] || ""}"`).join(",")
-        )
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "transactions.csv";
-    a.click();
-
-    URL.revokeObjectURL(url);
-    gridApi.deselectAll();
-};
-
-    gridApi.sizeColumnsToFit();
-};
-</script>
+                const headers = ["REF", "uploadName", "type", "store", "lines", "status", "uploadedAt"];
+                const csv = [headers.join(","), ...selectedRows.map(row => headers.map(h => `"${row[h] || ""}"`).join(","))].join("\n");
+                const blob = new Blob([csv], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "transactions.csv";
+                a.click();
+                URL.revokeObjectURL(url);
+                window.gridApi.deselectAll();
+            };
+        };
+    </script>
 </body>
 </html>
